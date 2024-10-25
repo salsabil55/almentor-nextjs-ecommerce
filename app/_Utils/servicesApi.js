@@ -30,8 +30,13 @@ const getServicesByCategory = (Category) => {
     });
 };
 
+const updateBookedService = (id, payload) => {
+  return axiosClient.put(`/services/${id}`, payload);
+};
+
 export default {
   getLatestServices,
   getServicesById,
   getServicesByCategory,
+  updateBookedService,
 };

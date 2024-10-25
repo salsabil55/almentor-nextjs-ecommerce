@@ -164,19 +164,21 @@ function cartPage() {
                 </div>
 
                 <div className="flex justify-between pb-3 pt-2 mb-5">
-                  <dt>Shipping Free</dt>
+                  <dt>Discount</dt>
                   <dd className="">-20 SAR</dd>
                 </div>
 
                 <div className="flex justify-between text-[17px] font-semibold border-t pt-5 border-gray-100">
                   <dt>Total (Inclusive of VAT)</dt>
-                  <dd>{getTotalAmount() - 15} SAR </dd>
+                  <dd>{getTotalAmount()} SAR </dd>
                 </div>
               </dl>
 
               <div className="flex w-[100%] items-center">
                 <button
-                  onClick={() => router.push(`/checkout`)}
+                  onClick={() =>
+                    router.push(`/checkout?amount=${getTotalAmount()}`)
+                  }
                   className="block w-[100%] text-center rounded bg-[#fd0000] px-5 py-3 text-sm text-gray-100 transition hover:bg-gray-600"
                 >
                   Checkout

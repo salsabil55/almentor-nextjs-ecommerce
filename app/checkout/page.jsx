@@ -10,14 +10,15 @@ function Checkout() {
   const searchParams = useSearchParams();
   const options = {
     mode: "payment",
-    currency: "usd",
+    currency: "sar",
     amount: 100,
     locale: "en",
+    amount: Number(searchParams.get("amount")),
   };
 
   return (
     <Elements stripe={stripePromise} options={options}>
-      <CheckoutForm />
+      <CheckoutForm amount={Number(searchParams.get("amount"))} />
     </Elements>
   );
 }

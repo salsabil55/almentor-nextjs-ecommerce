@@ -1,10 +1,10 @@
 "use client";
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-
+import servicesApi from "../../_Utils/servicesApi";
 import bookMarkApi from "../../_Utils/bookMarkApi";
 import { BookMarkContext } from "../../_Context/bookMarkContext";
 
@@ -14,8 +14,7 @@ function ServiceItem({ service }) {
 
   const { booked, setBooked } = useContext(BookMarkContext);
   const [bookedColor, setbookedColor] = useState(false);
-
-  const handleAddToBook = () => {
+  const handleAddToBook = (id) => {
     if (!user) {
       router.push("/sign-in");
     } else {
@@ -40,6 +39,7 @@ function ServiceItem({ service }) {
       console.log(data);
 
       // Ensure cartApi.addToCart exists and is a function
+
       bookMarkApi
         .addToBook(data)
         .then((res) => {
@@ -50,9 +50,15 @@ function ServiceItem({ service }) {
             ...oldCart,
             {
               id: res?.data?.data?.id,
-              service,
+              ...service, // Spreads all existing properties in `service`
+              attributes: {
+                // Ensure `booked` is within `attributes` if required
+                ...service.attributes,
+                booked: true, // Updates only the `booked` attribute
+              },
             },
           ]);
+          console.log(booked);
         })
         .catch((error) => {
           console.log("error", error);
@@ -70,7 +76,7 @@ function ServiceItem({ service }) {
           <button
             className="absolute end-4 top-3 z-20 rounded-full bg-[#252a2a] p-1 text-white border-gray-400 transition
           "
-            onClick={() => handleAddToBook()}
+            onClick={() => handleAddToBook(service?.id)}
           >
             <span className="sr-only">Wishlist</span>
 
@@ -81,7 +87,7 @@ function ServiceItem({ service }) {
           <button
             className="absolute end-4 top-3 z-20 rounded-full bg-[#252a2a] p-1 text-white border-gray-400 transition
           "
-            onClick={() => handleAddToBook()}
+            onClick={() => handleAddToBook(service?.id)}
           >
             <span className="sr-only">Wishlist</span>
 
