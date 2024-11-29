@@ -1,6 +1,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 const Modal = () => {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -36,12 +37,12 @@ const Modal = () => {
         <div
           id="modalOverlay"
           onClick={handleOverlayClick}
-          className={`fixed inset-0 flex items-center z-40 justify-center bg-gray-800 bg-opacity-80 transition-opacity duration-500 ease-in ${
+          className={`fixed inset-0 flex overflow-hidden items-center z-40 justify-center bg-gray-800 bg-opacity-80 transition-opacity duration-500 ease-in ${
             isModalOpen ? "opacity-100" : "opacity-0"
           }`}
         >
           <div
-            className={`bg-black p-6 rounded-lg shadow-lg relative ransform transition-transform duration-700 ease-in ${
+            className={`bg-black w-[100%] lg:w-[35%]  p-6 rounded-lg shadow-lg relative ransform transition-transform duration-700 ease-in ${
               bounce ? "animate-bounce" : ""
             } ${isModalOpen ? "scale-100" : "scale-0"}`}
           >
@@ -60,9 +61,11 @@ const Modal = () => {
             />
 
             <div className="flex items-center justify-center text-white">
-              <button className="bg-[#D0021B] text-[18px] pr-5 pl-5 pt-3 pb-3 rounded">
-                Subscribe Now
-              </button>
+              <Link href="/subscribe">
+                <button className="bg-[#D0021B] text-[18px] pr-5 pl-5 pt-3 pb-3 rounded">
+                  Subscribe Now
+                </button>
+              </Link>
             </div>
           </div>
         </div>

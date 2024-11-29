@@ -6,7 +6,7 @@ function Footer() {
   return (
     <footer className="bg-[#1b1f1f]">
       <div className="mx-auto max-w-screen-xl py-16 sm:px-6 lg:space-y-16 lg:px-8">
-        <div className="grid grid-cols-1 gap-50 lg:grid-cols-3 ">
+        <div className="grid grid-cols-1 gap-50 lg:grid-cols-3 ml-2">
           <div className="">
             <Image
               src="https://res.cloudinary.com/dahptqhed/image/upload/v1729065938/almentor_logo_2x_cfebb8e613.png"
@@ -20,7 +20,7 @@ function Footer() {
               motivational/informative talks in Arabic and English.
             </p>
 
-            <ul className="mt-8 flex gap-6">
+            <ul className="mt-8 flex gap-6 ml-2 mb-3">
               <li>
                 <a
                   href="#"
@@ -32,7 +32,7 @@ function Footer() {
 
                   <svg
                     className="size-6"
-                    fill="#ff0000"
+                    fill="#a40c0c"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
                   >
@@ -56,7 +56,7 @@ function Footer() {
 
                   <svg
                     className="size-6"
-                    fill="#ff0000"
+                    fill="#a40c0c"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
                   >
@@ -80,7 +80,7 @@ function Footer() {
 
                   <svg
                     className="size-6"
-                    fill="#ff0000"
+                    fill="#a40c0c"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
                   >
@@ -100,7 +100,7 @@ function Footer() {
 
                   <svg
                     className="size-6"
-                    fill="red"
+                    fill="#a40c0c"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
                   >
@@ -115,7 +115,7 @@ function Footer() {
             </ul>
           </div>
 
-          <div className="grid grid-cols-1 gap-16 ml-32 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-16 lg:ml-32 ml-2 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-2">
             <div>
               <p className="font-medium text-white text-[25px] ">
                 Get in Touch
@@ -173,7 +173,7 @@ function Footer() {
       </div>
       <div className="bg-[#040402] w-[100%] p-5">
         <p className="text-lg text-white text-center ">
-          &copy; 2024. <span className="text-[#ff0000]">Almentor.net.</span> All
+          &copy; 2024. <span className="text-[#bd2130]">Almentor.net.</span> All
           rights reserved.
         </p>
       </div>

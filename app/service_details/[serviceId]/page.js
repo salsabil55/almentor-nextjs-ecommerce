@@ -43,10 +43,6 @@ function ServiceDetail({ params }) {
       </div>
 
       <ServiceDetInfo serviceDetail={serviceDetail} />
-      <div className="mt-16 w-[100%]">
-        <p className="text-white mb-5 text-[20px]">Similr Courses</p>
-        <ServicesList serviceList={serviceList} />
-      </div>
     </div>
   );
 }

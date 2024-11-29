@@ -3,8 +3,8 @@ import Link from "next/link";
 
 function Hero() {
   return (
-    <section className="relative opacity-75 bg-[url(https://res.cloudinary.com/dahptqhed/image/upload/v1729084961/bg_mentor3_7d7964bde7.jpg)] bg-cover bg-center bg-no-repeat">
-      <div className="absolute inset-0 bg-black/75 sm:bg-transparent sm:from-white/95 sm:to-white/25 ltr:sm:bg-gradient-to-r rtl:sm:bg-gradient-to-l"></div>
+    <section className="relative opacity-90 lg:opacity-77 bg-[url(https://res.cloudinary.com/dahptqhed/image/upload/v1729084961/bg_mentor3_7d7964bde7.jpg)] bg-cover bg-center bg-no-repeat">
+      <div className="absolute inset-80 bg-black/40 lg:bg-black/77 sm:bg-transparent sm:from-white/95 sm:to-white/25 ltr:sm:bg-gradient-to-r rtl:sm:bg-gradient-to-l"></div>
 
       <div className="relative mx-auto max-w-screen-xl px-4 py-32 sm:px-6 lg:flex lg:h-screen lg:items-center lg:px-8">
         <div className="max-w-xl text-center flex ltr:sm:text-center rtl:sm:text-right relative">

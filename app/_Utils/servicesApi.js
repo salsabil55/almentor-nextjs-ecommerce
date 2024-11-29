@@ -1,8 +1,9 @@
 import axiosClient from "./axiosClient"; // Adjust the path as necessary
 
-const getLatestServices = () => {
+// Example using Axios
+const getLatestServices = (lng) => {
   return axiosClient
-    .get("/services?populate=*") // Ensure this endpoint is correct
+    .get(`services?populate=*&locale=${lng}`)
     .then((response) => response.data) // Return the data from the response
     .catch((error) => {
       console.error("Error fetching latest services:", error);
@@ -10,9 +11,9 @@ const getLatestServices = () => {
     });
 };
 
-const getServicesById = (id) => {
+const getServicesById = (id, lng) => {
   return axiosClient
-    .get(`/services/${id}?populate=*`) // Ensure this endpoint is correct
+    .get(`/services/${id}?populate=*&locale=${lng}`) // Ensure this endpoint is correct
     .then((response) => response.data) // Return the data from the response
     .catch((error) => {
       console.error("Error fetching latest services:", error);

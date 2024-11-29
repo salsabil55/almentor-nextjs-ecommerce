@@ -46,8 +46,8 @@ function cartPage() {
   // };
   return (
     <section>
-      <div className="mx-auto  px-4 py-8 sm:px-6 sm:py-12 lg:px-8 flex justify-between flex-wrap ">
-        <div className="mx-auto w-[60%] border rounded p-6 overflow-y-auto h-[430px]">
+      <div className="mx-auto  px-4 py-8 sm:px-6 sm:py-12 lg:px-8 flex justify-between flex-wrap">
+        <div className="mx-auto lg:w-[60%] w-[100%] mb-3 border rounded p-6 overflow-y-auto h-[430px]">
           <header className="text-left">
             <h1 className="text-l font-bold text-white sm:text-3xl">
               Courses Cart List
@@ -132,7 +132,7 @@ function cartPage() {
             </ul>
           </div>
         </div>
-        <div className="border w-[30%] text-white rounded p-6 h-[100%] overflow-hidden">
+        <div className="border w-[100%] lg:w-[30%] text-white rounded p-6 h-[100%] overflow-hidden">
           <p>Order Summary</p>
           <div className="mt-8 flex justify-end">
             <div className="w-screen max-w-lg space-y-4">

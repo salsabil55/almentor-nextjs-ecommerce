@@ -1,5 +1,5 @@
 "use client";
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   ShoppingCart,
   CircleOff,
@@ -13,10 +13,40 @@ import { useRouter } from "next/navigation";
 import SkeletonInfo from "./SkeletonInfo";
 import cartApi from "../../_Utils/cartApi";
 import { CartContext } from "../../_Context/cartContext";
+import AOS from "aos";
+import "aos/dist/aos.css";
 function ServiceInfo({ serviceDetail }) {
   const { user } = useUser();
   const router = useRouter();
   const { cart, setCart } = useContext(CartContext);
+  const [code, setCode] = useState("");
+  const [codeSuccess, setCodeSuccess] = useState(false);
+  const [codeError, setCodeError] = useState(false);
+
+  const [showButton, setShowButton] = useState(false);
+  // Capture the input value on change
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setCode(value);
+
+    // Show button only when there's input
+    setShowButton(value.trim() !== "");
+
+    // Clear message when code is cleared
+    if (value.trim() === "") {
+      setCodeSuccess(false);
+      setCodeError(false);
+    }
+  };
+
+  const applyCoupon = () => {
+    if (code.toLowerCase() === "mentor24") {
+      setCodeSuccess(true);
+    } else {
+      setCodeError(true);
+    }
+    setShowButton(false); // Hide button after clicking
+  };
 
   const handleAddToCart = () => {
     if (!user) {
@@ -61,13 +91,23 @@ function ServiceInfo({ serviceDetail }) {
         });
     }
   };
+  useEffect(() => {
+    AOS.init({
+      once: false,
+    });
+  }, []);
 
   return (
     <>
       <div className="">
         <div className="flex-wrap lg:h-screen">
           {serviceDetail?.id ? (
-            <div className="bg-[#0c0e0e] text-white rounded p-6 ml-12 mb-7 border-stone-400 border  shadow-lg shadow-[#001c25]">
+            <div
+              className="bg-[#0c0e0e] text-white rounded p-6 pb-2 ml-12 mb-7 border-stone-400 border  shadow-lg shadow-[#001c25]"
+              data-aos="fade-left"
+              data-aos-offset="300"
+              data-aos-easing="ease-in-sine"
+            >
               <h2 className="text-[22px] mb-6">
                 {serviceDetail?.attributes?.name}
               </h2>
@@ -100,7 +140,39 @@ function ServiceInfo({ serviceDetail }) {
                         className="coupon-text mt-3 border bg-[#e2e8f01a] w-[100%] text-center border-solid rounded pl-10 pr-10 h-11 text-[12px] border-gray-200"
                         type="text"
                         placeholder="Enter Your Coupoun code"
+                        value={code}
+                        onChange={handleInputChange}
                       />
+                      {/* {!codeSuccess && (
+                        <button
+                          className="mt-3 bg-white text-[#0c0e0e]  font-medium rounded w-[100%] text-center border-solid pl-10 pr-10 h-11 text-[15px] border-gray-200"
+                          onClick={handleButtonClick}
+                        >
+                          Apply Code
+                        </button>
+                      )} */}
+
+                      {codeSuccess && (
+                        <p className="bg-green-300 border-green-800 rounded mt-4 text-green-900 text-center p-3 font-normal">
+                          {" "}
+                          Code Applied Succefully
+                        </p>
+                      )}
+                      {codeError && (
+                        <p className="bg-red-300 border-red-800 rounded mt-4 text-red-900 text-center p-3 font-normal">
+                          {" "}
+                          Code Failed
+                        </p>
+                      )}
+
+                      {showButton && (
+                        <button
+                          className="mt-3 bg-white text-[#0c0e0e]  font-medium rounded w-[100%] text-center border-solid pl-10 pr-10 h-11 text-[15px] border-gray-200"
+                          onClick={applyCoupon}
+                        >
+                          Apply Coupon
+                        </button>
+                      )}
                     </div>
                   </>
                 ) : (
@@ -121,7 +193,7 @@ function ServiceInfo({ serviceDetail }) {
                 className="flex gap-2 mb-9 justify-center items-center text-center text-[13px] bg-[#eb2027] rounded-lg text-white w-[100%] pt-2 pb-2"
               >
                 <ShoppingCart className="w-4" />
-                Subscribe Now
+                Add To Cart
               </button>
             </div>
           ) : (
