@@ -47,24 +47,26 @@ function page() {
       (bookedItem) => bookedItem.id === item.id
     );
 
-    if (isAlreadyBooked) {
-      setBookedColor(bookedColor);
+    if (typeof window !== "undefined") {
+      if (isAlreadyBooked) {
+        setBookedColor(bookedColor);
 
-      // Remove from booked
-      const updatedBooked = booked.filter(
-        (bookedItem) => bookedItem.id !== item.id
-      );
-      setBooked(updatedBooked);
-      localStorage.setItem("bookedItems", JSON.stringify(updatedBooked));
-      toast.error("Item removed from bookmarks!");
-    } else {
-      setBookedColor(!bookedColor);
+        // Remove from booked
+        const updatedBooked = booked.filter(
+          (bookedItem) => bookedItem.id !== item.id
+        );
+        setBooked(updatedBooked);
+        localStorage.setItem("bookedItems", JSON.stringify(updatedBooked));
+        toast.error("Item removed from bookmarks!");
+      } else {
+        setBookedColor(!bookedColor);
 
-      // Add to booked
-      const updatedBooked = [...booked, item];
-      setBooked(updatedBooked);
-      localStorage.setItem("bookedItems", JSON.stringify(updatedBooked));
-      toast.success("Item added to bookmarks!");
+        // Add to booked
+        const updatedBooked = [...booked, item];
+        setBooked(updatedBooked);
+        localStorage.setItem("bookedItems", JSON.stringify(updatedBooked));
+        toast.success("Item added to bookmarks!");
+      }
     }
   };
 

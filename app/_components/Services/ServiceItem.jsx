@@ -56,20 +56,22 @@ function ServiceItem({ service }) {
       (bookedItem) => bookedItem.id === item.id
     );
 
-    if (isAlreadyBooked) {
-      // Remove from booked
-      const updatedBooked = booked.filter(
-        (bookedItem) => bookedItem.id !== item.id
-      );
-      setBooked(updatedBooked);
-      localStorage.setItem("bookedItems", JSON.stringify(updatedBooked));
-      toast.error("Item removed from bookmarks!");
-    } else {
-      // Add to booked
-      const updatedBooked = [...booked, item];
-      setBooked(updatedBooked);
-      localStorage.setItem("bookedItems", JSON.stringify(updatedBooked));
-      toast.success("Item added to bookmarks!");
+    if (typeof window !== "undefined") {
+      if (isAlreadyBooked) {
+        // Remove from booked
+        const updatedBooked = booked.filter(
+          (bookedItem) => bookedItem.id !== item.id
+        );
+        setBooked(updatedBooked);
+        localStorage.setItem("bookedItems", JSON.stringify(updatedBooked));
+        toast.error("Item removed from bookmarks!");
+      } else {
+        // Add to booked
+        const updatedBooked = [...booked, item];
+        setBooked(updatedBooked);
+        localStorage.setItem("bookedItems", JSON.stringify(updatedBooked));
+        toast.success("Item added to bookmarks!");
+      }
     }
   };
 
