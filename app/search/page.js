@@ -1,197 +1,224 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import servicesApi from "../_Utils/servicesApi";
+import SkeletonService from "../courses/skeletonService";
 import Image from "next/image";
 import Link from "next/link";
-
-import { useRouter } from "next/navigation";
-import { useSearchParams } from "next/navigation";
-import SkeletonService from "../courses/skeletonService";
 import i18n from "../i18n";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "next/navigation";
 import cookies from "js-cookie";
+import useSetup from "../hooks/useSetup";
 
-import { useUser } from "@clerk/nextjs";
+// Normalize text (removing diacritics for Arabic and ensuring consistent comparison)
+const normalizeText = (text) => {
+  if (!text) return "";
+  return text
+    .normalize("NFKD") // Normalize Unicode
+    .replace(/[\u064B-\u065F]/g, "") // Remove Arabic diacritics
+    .toLowerCase(); // Case-insensitive
+};
 
-import servicesApi from "../_Utils/servicesApi"; // Adjust the import path as needed
-import AOS from "aos";
-import { toast } from "react-toastify";
-const Page = () => {
-  const { t } = useTranslation();
-  const lng = cookies.get("i18next") || "en";
+const SearchPage = () => {
+  const { lng, isDarkMode, t } = useSetup();
+
   const router = useRouter();
+  const { pathname } = router;
+
   const searchParams = useSearchParams();
-  const [serviceList, setServiceList] = useState([]);
-  const text = searchParams.get("query");
-  const [filter, setFilter] = useState(text); // Initialize filter state
+  const query = searchParams.get("query") || ""; // Get the query from the URL
+  const [services, setServices] = useState([]); // All fetched services
+  const [filteredServices, setFilteredServices] = useState([]); // Filtered results
   const [loading, setLoading] = useState(true);
-  const { user } = useUser();
+  const [lnges, setlnges] = useState(cookies.get("i18next") || i18n.language); // Track current language
+  const [isChanging, setIsChanging] = useState(false); // Track language change
 
-  let en = false;
-  let ar = false;
-  if (lng === "en") {
-    en = true;
-  } else {
-    ar = true;
-  }
-
-  const enLng = () => {
-    i18n.changeLanguage("en");
-    console.log("enLng");
-  };
-  const arLng = () => {
-    i18n.changeLanguage("ar");
-  };
-  useEffect(() => {
-    window.document.dir = i18n.dir();
-  }, [lng]);
-
-  const notify = () => {
-    toast.error("You Must Be Logged in");
-  };
-  useEffect(() => {
-    getService();
-  }, []);
-  const getService = async () => {
+  // Fetch services from the API
+  const fetchServices = async () => {
     try {
-      // Await the API call to get the latest services
-      const response = await servicesApi.getLatestServices();
-      const data = response.data;
-      setServiceList(data);
+      setLoading(true);
+      const response = await servicesApi.getLatestServices(); // Fetch all services
+      setServices(response.data); // Store all services
       setLoading(false);
-
-      console.log("Response:", response.data);
     } catch (error) {
-      console.error("Error fetching product:", error);
+      console.error("Error fetching services:", error);
+      setLoading(false);
     }
   };
-  // Handle search input
-  const handleSearchChange = (event) => {
-    setFilter(event.target.value);
-  };
 
-  // Filter services based on title or author
-  const filteredServices = serviceList.filter((service) => {
-    const title = service?.attributes?.name?.toLowerCase() || { text };
-    const author = service?.attributes?.Author?.toLowerCase() || { text };
-    return (
-      title.includes(filter.toLowerCase()) ||
-      author.includes(filter.toLowerCase())
-    );
-  });
+  // Filter services based on query
+  const filterServices = (query) => {
+    const normalizedQuery = normalizeText(query); // Normalize user input
+    const results = services.filter((service) => {
+      const name = normalizeText(service?.attributes?.name || ""); // Normalize English name
+      const nameAr = normalizeText(service?.attributes?.name_ar || ""); // Normalize Arabic name
+
+      // Match query against both name and name_ar fields
+      return name.includes(normalizedQuery) || nameAr.includes(normalizedQuery);
+    });
+
+    setFilteredServices(results); // Update filtered services
+  };
   const filterLength = filteredServices.length;
 
-  // // Wait until the router is ready
-  // useEffect(() => {
-  //   if (router.isReady) {
-  //     setIsReady(true);
-  //     const { query: queryParam } = router.query;
-  //     setQuery(queryParam || "");
-  //   }
-  // }, [router.isReady, router.query]);
+  // Fetch services when the component mounts
+  useEffect(() => {
+    fetchServices();
+  }, []);
 
-  // // Fetch data from the API
-  // useEffect(() => {
-  //   const getService = async () => {
-  //     try {
-  //       const response = await servicesApi.getLatestServices();
-  //       setData(response.data);
-  //       console.log("Response:", response.data);
-  //     } catch (error) {
-  //       console.error("Error fetching product:", error);
-  //     }
-  //   };
+  // Apply filtering when the query or services change
+  useEffect(() => {
+    if (query) {
+      filterServices(query); // Filter services based on query
+    } else {
+      setFilteredServices(services); // Show all services if no query
+    }
+  }, [query, services]);
+  // Listen for language changes
+  const isOnSearchPage = pathname === "/search";
 
-  //   getService();
-  // }, []);
+  const handleLanguageChange = (language) => {
+    setIsChanging(true); // Start animation
+    setlnges(language); // Update language state
 
-  // // Filter data based on query
-  // useEffect(() => {
-  //   if (query && data.length > 0) {
-  //     setFilteredData(
-  //       data.filter((item) =>
-  //         item.name.toLowerCase().includes(query.toLowerCase())
-  //       )
-  //     );
-  //   } else {
-  //     setFilteredData(data); // Show all data if no query
-  //   }
-  // }, [query, data]);
-
-  // Wait for router readiness
+    setTimeout(() => {
+      setIsChanging(false); // End animation
+    }, 500); //
+  };
+  i18n.on("languageChanged", handleLanguageChange); // Listen for language changes
 
   return (
-    <div className="mt-10 p-10 bg-[#1e2121]">
+    <div
+      className={`mt-10 p-10 ${
+        !isDarkMode ? "bg-[#e5e0e0] text-[#1e21214d]" : " bg-[#1e2121]"
+      }`}
+    >
       {!loading && (
-        <>
-          <div className="mt-3 flex justify-center">
-            <h2 className="text-white text-[25px] lg-text-[30px] font-extrabold">
-              {t("Discover All Courses")}
-            </h2>
-          </div>
-
-          <div className="flex justify-center mt-5 flex-col lg:flex-row items-center">
-            <input
-              placeholder="Search Your course ..."
-              value={filter}
-              onChange={handleSearchChange} // Update search input
-              className="pt-3 pb-3 w-[100%] mb-2 lg:w-[60%] border bg-[#1e2121] rounded pl-4 text-white"
-            />
-            <button className=" rounded bg-[#bd2130] h-12 w-[100%] lg:w-[100px] text-center pt-3 text-white pr-3 pb-3 lg:pr-7 lg:pl-7 lg:ml-3">
-              Search
-            </button>
-          </div>
-        </>
+        <div>
+          <h2
+            className={`text-[25px] lg-text-[30px] font-extrabold text-center ${
+              !isDarkMode ? "text-[#1e2121]" : "text-white"
+            }`}
+          >
+            {t("Discover All Courses")}
+          </h2>
+        </div>
       )}
 
-      <div className="bg-[#141717] w-[full] p-5 hover:shadow-md overflow-hidden mb-8 rounded mt-10 ">
-        {!loading ? (
-          <div className=" grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 lg:gap-3 lg:p-10">
-            {/* Display filtered list */}
-            {filteredServices.map((service) => (
-              <div
-                key={service.id}
-                className="bg-[#141717] w-full lg:p-5 hover:shadow-md overflow-hidden mb-8 rounded"
-              >
-                <div
-                  id={service.id}
-                  className="group bg-[#141717] w-[220px] lg:w-[320px] m-auto relative block overflow-hidden rounded-lg shadow-sm shadow-indigo-100"
-                  data-aos="fade-up"
-                  data-aos-anchor-placement="center-bottom"
-                >
-                  <Image
-                    src={service?.attributes?.image?.data?.attributes?.url}
-                    lg-width={320}
-                    width={220}
-                    height={200}
-                    alt="Service Image"
-                    className="h-56 w-[260px] sm:w-[320px] lg:w-[360px] object-cover transition duration-500 group-hover:scale-105 sm:h-60 bg-black"
-                  />
-                  <Link href={`/service_details/${service?.id}`}>
-                    <div
-                      className="relative bg-[#141717] p-2 border rounded"
-                      data-aos="fade-zoom-in"
-                      data-aos-easing="ease-in-back"
-                    >
-                      <h3 className="mt-1.5 text-[15px] text-white line-clamp-1">
-                        {service?.attributes?.name || "Course"}
-                      </h3>
-                      <p className="mt-1.5 text-[#a1a1a1] text-[13px]">
-                        By {service?.attributes?.Author}
-                      </p>
-                      <p className="text-white mt-4">
-                        <span className="text-white line-through mr-5">
-                          8000 SAR /mo
-                        </span>
-                        {service?.attributes?.price} SAR /mo
-                      </p>
-                    </div>
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
+      <div className=" w-full p-5overflow-hidden mb-8 rounded mt-10 m-[auto]">
+        {loading ? (
           <SkeletonService />
+        ) : (
+          <div
+            className={`page-container ${isChanging ? "fade-out" : "fade-in"}`}
+          >
+            <div className=" grid grid-cols-1 gap-2 md:grid-cols-1 lg:grid-cols-1 lg:gap-3 lg:p-10">
+              {filteredServices.map((service) => (
+                <div
+                  key={service.id}
+                  className={`flex-wrap flex lg:flex xl:flex-nowrap md:justify-center lg:flex-nowrap md:flex-nowrap w-full m-[auto] lg:p-5 hover:shadow-md overflow-hidden mb-8 rounded${
+                    !isDarkMode ? "bg-[#141717] " : ""
+                  }`}
+                >
+                  <div>
+                    <Image
+                      src={service?.attributes?.image?.data?.attributes?.url}
+                      lg-width={300}
+                      width={500}
+                      height={300}
+                      alt="Service Image"
+                      className="h-70 w-[500px] sm:w-[320px] lg:w-[300px] object-cover  rounded transition duration-500 group-hover:scale-105 sm:h-60 bg-black"
+                    />
+                  </div>
+                  <div className="">
+                    <Link href={`/service_details/${service?.id}`}>
+                      <div
+                        className={`relative p-2 ${
+                          !isDarkMode
+                            ? "bg-white text-[#141717]"
+                            : "bg-[#141717]"
+                        }`}
+                        data-aos="fade-zoom-in"
+                        data-aos-easing="ease-in-back"
+                      >
+                        <h3
+                          className={`mt-1.5 text-lg  line-clamp-1 ltr:ml-1 ${
+                            !isDarkMode ? "text-[#141717]" : "text-white"
+                          }`}
+                        >
+                          {lng === "ar"
+                            ? service?.attributes?.name_ar // Display Arabic name for Arabic users
+                            : service?.attributes?.name}
+                        </h3>
+
+                        <p
+                          className={`text-[13px] mt-1.5 ${
+                            !isDarkMode ? "text-[#141717]" : "text-[#a1a1a1]"
+                          }`}
+                        >
+                          {t("By")}
+                          <span className="ml-2 mr-2 text-[#bd2130]">
+                            {lng === "ar"
+                              ? service?.attributes?.Author_ar // Display Arabic name for Arabic users
+                              : service?.attributes?.Author}
+                          </span>
+                        </p>
+
+                        <p
+                          className={`mt-4 text-[13px] ${
+                            !isDarkMode ? "text-[#141717]" : "text-[#ffffff99]"
+                          }`}
+                        >
+                          {t("searchText")}{" "}
+                          {lng === "ar"
+                            ? service?.attributes?.name_ar // Display Arabic name for Arabic users
+                            : service?.attributes?.name}
+                        </p>
+
+                        <div
+                          className={`flex mt-5 text-[14px] ${
+                            !isDarkMode ? "text-[#141717]" : "text-[#ffffff99]"
+                          }`}
+                        >
+                          <p>
+                            {t("courseLanguage")} :{" "}
+                            {service?.attributes?.courseLanguage}
+                          </p>
+                          <p className="ml-4 mr-4">
+                            {t("Duration")} : {service?.attributes?.Duration}{" "}
+                          </p>
+                        </div>
+                        <div className="border rounded mt-8 mr-2 ml-2 w-[300px] mb-7 bg-[#bd2130]">
+                          <p
+                            className={` mr-2 ml-2 rounded ${
+                              !isDarkMode ? "text-white" : "text-[#ffffff99]"
+                            }`}
+                          >
+                            {lng === "ar" ? (
+                              <div dir="ltr" className="text-right">
+                                <span className=" line-through mr-2 ml-2">
+                                  8000 SAR /mo
+                                </span>
+                                {service?.attributes?.price} SAR /mo
+                              </div>
+                            ) : (
+                              <>
+                                <span className="line-through mr-2 ml-2 ">
+                                  8000 SAR /mo
+                                </span>
+                                ${service?.attributes?.price} SAR /mo
+                              </>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
         {filterLength == 0 && (
           <div className="flex justify-center items-center flex-col">
@@ -201,8 +228,12 @@ const Page = () => {
               width={170}
               height={160}
             />
-            <h2 className="text-[28px] font-semibold text-white mb-20">
-              We couldn't find any search results
+            <h2
+              className={`mb-20 text-[28px] font-semibold
+                     ${!isDarkMode ? "text-[#141717]" : "text-white"}`}
+            >
+              {" "}
+              {t("We couldn't find any search results")}
             </h2>
           </div>
         )}
@@ -211,4 +242,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default SearchPage;

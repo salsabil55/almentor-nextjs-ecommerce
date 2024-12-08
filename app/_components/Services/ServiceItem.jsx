@@ -10,12 +10,14 @@ import { useUser } from "@clerk/nextjs";
 import bookMarkApi from "../../_Utils/bookMarkApi";
 import { BookMarkContext } from "../../_Context/bookMarkContext";
 import SkeletonItem from "../../service_details/_components/skeletonItem";
+import useSetup from "../../hooks/useSetup";
+
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function ServiceItem({ service }) {
+  const { lng, isDarkMode, t } = useSetup();
   const { user } = useUser();
-  // const router = useRouter();
   const { booked, setBooked } = useContext(BookMarkContext);
   const [loading, setLoading] = useState(true);
 
@@ -46,10 +48,6 @@ function ServiceItem({ service }) {
     }
   }, [setBooked]);
 
-  const handleBooked = () => {
-    // Calling toast method by passing string
-    toast.error("You Already Booked in");
-  };
   const handleToggleBook = (item) => {
     const isAlreadyBooked = booked.some(
       (bookedItem) => bookedItem.id === item.id
@@ -77,11 +75,15 @@ function ServiceItem({ service }) {
   };
 
   return (
-    <div className="bg-[#141717] w-[320px] lg:w-[360px] m-auto p-5 hover:shadow-md overflow-hidden mb-8 rounded">
+    <div
+      className={`w-[360px] lg:w-[360px] m-auto p-5 hover:shadow-md overflow-hidden mb-8 rounded ${
+        !isDarkMode ? "bg-[#d1cfcf]" : "bg-[#141717] "
+      }`}
+    >
       {!loading ? (
         <div
           id={service?.id}
-          className="group bg-[#141717] w-[260px] sm:w-[320px] md:w-[280px] lg:w-[320px] m-auto relative block overflow-hidden rounded-lg shadow-sm shadow-indigo-100"
+          className="group bg-[#141717] w-[260px] sm:w-[320px] md:w-[280px] lg:w-[300px] m-auto relative block overflow-hidden rounded-lg shadow-sm shadow-indigo-100"
           data-aos="fade-up"
           data-aos-anchor-placement="center-bottom"
         >
@@ -95,7 +97,7 @@ function ServiceItem({ service }) {
           ) : (
             <button
               onClick={() => handleToggleBook(service)}
-              className="absolute end-4 top-3 z-20 rounded-full bg-[#252a2a] p-1 text-white border-gray-400 transition"
+              className="absolute end-4 top-3 z-20 border rounded-full bg-[#252a2a] p-1 text-white border-gray-400 transition"
             >
               {isBooked ? <Bookmark className="fill-white" /> : <Bookmark />}
             </button>
@@ -106,22 +108,54 @@ function ServiceItem({ service }) {
               service?.attributes?.image?.data?.attributes?.url ||
               "/fallback.jpg"
             }
-            width={300}
+            width={280}
             height={200}
             alt={service?.attributes?.name || "Service Image"}
-            className="h-56 w-[260px] sm:w-[320px] lg:w-[360px] transition duration-500 group-hover:scale-105"
+            className="h-56 w-[260px] sm:w-[320px] lg:w-[300px] transition duration-500 group-hover:scale-105"
           />
 
           <Link href={`/service_details/${service?.id}`}>
-            <div className="relative bg-[#141717] p-2 border rounded">
-              <h3 className="mt-1.5 text-[12px] lg:text-[15px] text-white line-clamp-1">
-                {service?.attributes?.name}
+            <div
+              className={`relative  p-2 border rounded ${
+                !isDarkMode ? "bg-[#e5e5e5]" : "bg-[#141717]"
+              }`}
+            >
+              <h3
+                className={`mt-1.5 text-[12px] lg:text-[15px] line-clamp-1 ${
+                  !isDarkMode ? "text-black font-bold" : "text-white"
+                }`}
+              >
+                {lng === "ar"
+                  ? service?.attributes?.name_ar // Display Arabic name for Arabic users
+                  : service?.attributes?.name}
               </h3>
-              <p className="mt-1.5 text-[#a1a1a1] text-[13px]">
-                By {service?.attributes?.Author}
+              <p
+                className={`mt-1.5 text-[13px] line-clamp-1${
+                  !isDarkMode ? "text-black" : "text-[#a1a1a1]"
+                }`}
+              >
+                {t("By")}
+                <span
+                  className={`mr-2 ml-2 ${
+                    !isDarkMode ? "text-black" : "text-white"
+                  }`}
+                >
+                  {lng === "ar"
+                    ? service?.attributes?.Author_ar // Display Arabic name for Arabic users
+                    : service?.attributes?.Author}{" "}
+                </span>
               </p>
-              <p className="text-white mt-4">
-                <span className="text-white line-through mr-5">
+              <p
+                className={`mt-4 ${!isDarkMode ? "text-black" : "text-white"} ${
+                  lng === "ar" ? "text-right" : ""
+                }`}
+                dir={lng === "ar" ? "ltr" : ""}
+              >
+                <span
+                  className={`line-through mr-5 ${
+                    !isDarkMode ? "text-black" : "text-white"
+                  }`}
+                >
                   8000 SAR /mo
                 </span>
                 {service?.attributes?.price} SAR /mo

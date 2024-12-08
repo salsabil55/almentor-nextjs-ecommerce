@@ -1,23 +1,43 @@
 import Image from "next/image";
 import { Mail, MapPin } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
+import i18n from "../../i18n";
+import useSetup from "../../hooks/useSetup";
 
 function Footer() {
+  const { lng, isDarkMode, t } = useSetup();
+
+  useEffect(() => {
+    window.document.dir = i18n.dir();
+  }, [lng]);
+
   return (
-    <footer className="bg-[#1b1f1f]">
+    <footer
+      className={`${lng === "ar" ? "rtl" : ""} ${
+        !isDarkMode ? "bg-[#e5e5e5]" : "bg-[#1b1f1f]"
+      }`}
+    >
       <div className="mx-auto max-w-screen-xl py-16 sm:px-6 lg:space-y-16 lg:px-8">
-        <div className="grid grid-cols-1 gap-50 lg:grid-cols-3 ml-2">
+        <div className="grid grid-cols-1 gap-50 lg:grid-cols-3 ml-2 pr-10 pl-10">
           <div className="">
             <Image
-              src="https://res.cloudinary.com/dahptqhed/image/upload/v1729065938/almentor_logo_2x_cfebb8e613.png"
+              src={`${
+                !isDarkMode
+                  ? "https://res.cloudinary.com/dahptqhed/image/upload/v1733161852/almentor_owler_20210531_111400_original_7a0a6accc9.png"
+                  : "https://res.cloudinary.com/dahptqhed/image/upload/v1729065938/almentor_logo_2x_cfebb8e613.png "
+              }`}
               width={180}
-              height={40}
+              height={!isDarkMode ? "60" : "40"}
               className="object-fill"
             />
-            <p className="mt-4 max-w-xl text-gray-500">
-              e-learning and professional people development network serving the
-              Middle East and Africa. Offering video courses and
-              motivational/informative talks in Arabic and English.
+            <p
+              className={`mt-4 max-w-xl ${
+                !isDarkMode ? "text-[#1b1f1f]" : "text-gray-500 "
+              }`}
+            >
+              {t(
+                "e-learning and professional people development network serving the Middle East and Africa. Offering video courses and motivational/informative talks in Arabic and English"
+              )}
             </p>
 
             <ul className="mt-8 flex gap-6 ml-2 mb-3">
@@ -50,7 +70,9 @@ function Footer() {
                   href="#"
                   rel="noreferrer"
                   target="_blank"
-                  className="text-gray-700 transition hover:opacity-75"
+                  className={`transition hover:opacity-75 ${
+                    !isDarkMode ? "text-[#1b1f1f]" : "text-gray-500 "
+                  }`}
                 >
                   <span className="sr-only">Instagram</span>
 
@@ -74,7 +96,9 @@ function Footer() {
                   href="#"
                   rel="noreferrer"
                   target="_blank"
-                  className="text-gray-700 transition hover:opacity-75"
+                  className={`transition hover:opacity-75 ${
+                    !isDarkMode ? "text-[#1b1f1f]" : "text-gray-500 "
+                  }`}
                 >
                   <span className="sr-only">Twitter</span>
 
@@ -94,7 +118,9 @@ function Footer() {
                   href="#"
                   rel="noreferrer"
                   target="_blank"
-                  className="text-gray-700 transition hover:opacity-75"
+                  className={`transition hover:opacity-75 ${
+                    !isDarkMode ? "text-[#1b1f1f]" : "text-gray-500 "
+                  }`}
                 >
                   <span className="sr-only">GitHub</span>
 
@@ -117,27 +143,48 @@ function Footer() {
 
           <div className="grid grid-cols-1 gap-16 lg:ml-32 ml-2 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-2">
             <div>
-              <p className="font-medium text-white text-[25px] ">
-                Get in Touch
+              <p
+                className={`font-medium text-[25px] ${
+                  !isDarkMode ? "text-[#1b1f1f]" : " text-white "
+                }`}
+              >
+                {t("Get in Touch")}
               </p>
 
               <ul className="mt-6 space-y-4 text-sm ">
                 <li className="flex">
-                  <Mail w={1} className="text-white mr-2" />
+                  <Mail
+                    w={1}
+                    className={
+                      !isDarkMode
+                        ? "text-[#1b1f1f] ml-2 mr-2"
+                        : "white mr-2 ml-2 "
+                    }
+                  />
                   <a
                     href="#"
-                    className="text-white transition hover:opacity-75"
+                    className={`transition hover:opacity-75 ${
+                      !isDarkMode ? "text-[#1b1f1f]" : " text-white "
+                    }`}
                   >
-                    {" "}
                     support@almentor.net
                   </a>
                 </li>
 
                 <li className="flex">
-                  <MapPin w={2} className="text-white mr-2" />
+                  <MapPin
+                    w={2}
+                    className={
+                      !isDarkMode
+                        ? "text-[#1b1f1f] ml-2 mr-2"
+                        : "text-white ml-2 mr-2 "
+                    }
+                  />
                   <a
                     href="#"
-                    className="text-white transition hover:opacity-75"
+                    className={`transition hover:opacity-75 ${
+                      !isDarkMode ? "text-[#1b1f1f]" : " text-white "
+                    }`}
                   >
                     25 Misr Helwan Agriculture Rd, Maadi, Cairo, Egypt
                   </a>
@@ -146,24 +193,34 @@ function Footer() {
             </div>
 
             <div>
-              <p className="font-medium text-white text-[25px]">Quick Links</p>
+              <p
+                className={`font-medium text-[25px] ${
+                  !isDarkMode ? "text-[#1b1f1f]" : " text-white "
+                }`}
+              >
+                {t("Quick Links")}
+              </p>
 
               <ul className="mt-6 space-y-4 text-sm">
                 <li>
                   <a
                     href="#"
-                    className="text-white transition hover:opacity-75"
+                    className={`transition hover:opacity-75 ${
+                      !isDarkMode ? "text-[#1b1f1f]" : " text-white "
+                    }`}
                   >
-                    Privacy Policy
+                    {t("Privacy Policy")}
                   </a>
                 </li>
 
                 <li>
                   <a
                     href="#"
-                    className="text-white transition hover:opacity-75"
+                    className={`transition hover:opacity-75 ${
+                      !isDarkMode ? "text-[#1b1f1f]" : " text-white "
+                    }`}
                   >
-                    Terms and Conditions
+                    {t("Terms and Conditions")}
                   </a>
                 </li>
               </ul>
@@ -172,7 +229,11 @@ function Footer() {
         </div>
       </div>
       <div className="bg-[#040402] w-[100%] p-5">
-        <p className="text-lg text-white text-center ">
+        <p
+          className={`text-lg text-white text-center ${
+            lng === "ar" ? "rtl" : ""
+          }`}
+        >
           &copy; 2024. <span className="text-[#bd2130]">Almentor.net.</span> All
           rights reserved.
         </p>

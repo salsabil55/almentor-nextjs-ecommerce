@@ -18,7 +18,6 @@ const PageWithAutoOpenModal = () => {
 
   return (
     <div className="">
-      <h1 className="text-2xl">Page with Auto-Open Modal</h1>
       <Modal isOpen={isModalOpen} onClose={handleCloseModal}></Modal>
     </div>
   );

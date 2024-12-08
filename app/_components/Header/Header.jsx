@@ -8,42 +8,100 @@ import Cart from "../Cart/Cart";
 import React, { useContext, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { CartContext } from "../../_Context/cartContext";
+import { usePathname } from "next/navigation";
 
 import cartApi from "../../_Utils/cartApi";
-import { SearchContext } from "../../_Context/SearchContext";
+// import { SearchContext } from "../../_Context/SearchContext";
 import { BookMarkContext } from "../../_Context/bookMarkContext";
 import { slide as Menu } from "react-burger-menu";
 
 import i18n from "../../i18n";
 import { useTranslation } from "react-i18next";
 import cookies from "js-cookie";
+import classNames from "classnames";
 
 function Header() {
+  const pathname = usePathname();
+
   const { t } = useTranslation();
-  const lng = cookies.get("i18next") || "en";
+  // const lng = cookies.get("i18next") || "en";
+
   const { user } = useUser();
   const router = useRouter();
+  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark mode
   const { cart, setCart } = useContext(CartContext);
-  const { booked, setBooked } = useContext(BookMarkContext);
-  const { searchList, setSearchList } = useContext(SearchContext);
+  // const { booked, setBooked } = useContext(BookMarkContext);
+  // const { searchList, setSearchList } = useContext(SearchContext);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [query, setQuery] = useState(""); // State for the search query
+  const [lng, setLng] = useState(cookies.get("i18next") || i18n.language); // Track current language
+  const [isUserInitiated, setIsUserInitiated] = useState(false); // Track user action
 
-  const handleSearchChange = (e) => {
-    setSearchText(e.target.value);
-    setSearchList(e.target.value);
+  const toggleMode = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    setMobileMenu(!mobileMenu);
+
+    // Save mode to session storage to persist across pages
+    sessionStorage.setItem("theme", newMode ? "dark" : "light");
+
+    // Update the data-theme attribute
+    document.documentElement.setAttribute(
+      "data-theme",
+      newMode ? "dark" : "light"
+    );
+    window.dispatchEvent(new Event("storage"));
   };
+  useEffect(() => {
+    // On initial load, check session storage for the user's preference
+    const savedTheme = sessionStorage.getItem("theme");
+    if (savedTheme) {
+      const isDark = savedTheme === "dark";
+      setIsDarkMode(isDark);
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchText.trim()) {
-      // Redirect to Course page with the search term as a query parameter
-      router.push(`/search?query=${encodeURIComponent(searchText)}`);
+      // Apply the saved theme
+      document.documentElement.setAttribute(
+        "data-theme",
+        isDark ? "dark" : "light"
+      );
     }
+  }, []); // Run only on component mount
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setQuery(value);
+    setIsUserInitiated(true); // Mark as user-initiated
+
+    router.push(
+      `/search?query=${encodeURIComponent(value)}&lng=${lng}`,
+      undefined,
+      { shallow: true }
+    );
+  };
+  useEffect(() => {
+    setQuery("");
+    if (isUserInitiated && pathname === "/search") {
+      const currentQuery =
+        new URLSearchParams(window.location.search).get("query") || "";
+      router.push(
+        `/search?query=${encodeURIComponent(currentQuery)}&lng=${lng}`,
+        undefined,
+        { shallow: true }
+      );
+    } else {
+      setIsUserInitiated(false);
+    } // Reset after handling user action
+  }, [lng]);
+
+  const LanguageChange = (language) => {
+    i18n.changeLanguage(language); // Update language in i18next
+    cookies.set("i18next", language); // Save the new language in cookies
+    setLng(language); // Update local state for language
+    // setIsUserInitiated(true); // Mark as user-initiated
   };
 
   const [openCart, setOpenCart] = useState(false);
-
   const bookedItems = localStorage.getItem("bookedItems");
   const bookedItemLength = bookedItems ? JSON.parse(bookedItems).length : 0;
 
@@ -51,23 +109,25 @@ function Header() {
     event.preventDefault();
   };
 
-  let en = false;
-  let ar = false;
-  if (lng === "en") {
-    en = true;
-  } else {
-    ar = true;
-  }
+  // let en = false;
+  // let ar = false;
+  // if (lng === "en") {
+  //   en = true;
+  // } else {
+  //   ar = true;
+  // }
 
-  const enLng = () => {
-    i18n.changeLanguage("en");
-    console.log("enLng");
-  };
-  const arLng = () => {
-    i18n.changeLanguage("ar");
-  };
   useEffect(() => {
     window.document.dir = i18n.dir();
+    if (router.pathname === "/search") {
+      const currentQuery =
+        new URLSearchParams(window.location.search).get("query") || "";
+      router.push(
+        `/search?query=${encodeURIComponent(currentQuery)}&lng=${lnges}`,
+        undefined,
+        { shallow: true }
+      );
+    }
   }, [lng]);
   useEffect(() => {
     user && getCartItems();
@@ -77,7 +137,6 @@ function Header() {
     cartApi
       .getUserCartItems(user.primaryEmailAddress.emailAddress)
       .then((res) => {
-        console.log(res?.data?.data);
         res?.data?.data.forEach((cartItem) => {
           setCart((oldCart) => [
             ...oldCart,
@@ -111,15 +170,31 @@ function Header() {
       height: "23px",
       color: "white", // Icon color
     },
+    whiteIcon: {
+      color: "#2a2e2e66",
+      width: "23px", // Adjust icon size
+      height: "23px",
+    },
+    gryIcon: {
+      color: "#88969c",
+      width: "23px", // Adjust icon size
+      height: "23px",
+    },
   };
 
   return (
     <div>
-      <header className="bg-[#1e2121] dark:[#1e2121] overflow-hidden">
-        <div className="mx-auto relative flex h-16 max-w-screen-xl items-center gap-2 lg:gap-8 px-4 sm:px-6 lg:px-8 shadow-md">
+      <header
+        className={
+          isDarkMode
+            ? "bg-[#1e2121] dark:[#1e2121] overflow-hidden"
+            : "bg-[#e5e5e5] justify-center items-center"
+        }
+      >
+        <div className="mx-auto relative flex h-16 items-center gap-2 lg:gap-8 px-4 sm:px-6 lg:px-8 shadow-md">
           <button
             onClick={() => setMobileMenu(!mobileMenu)}
-            className="rtl:right-0 block rounded  p-1 text-gray-600 transition hover:text-gray-600/75 md:hidden overflow-hidden dark:text-white dark:hover:text-white/75"
+            className="xl:hidden md:block lg:hidden rtl:right-0 rounded  p-1 text-gray-600 transition hover:text-gray-600/75 overflow-hidden dark:text-white dark:hover:text-white/75"
           >
             <span className="sr-only">Toggle menu</span>
             <svg
@@ -139,30 +214,39 @@ function Header() {
           </button>
           <Link className="block text-teal-600 dark:text-teal-300 " href="/">
             <span className="sr-only">Home</span>
-            <Image
-              src="https://res.cloudinary.com/dahptqhed/image/upload/v1729065938/almentor_logo_2x_cfebb8e613.png"
-              width={124}
-              height={24}
-              alt="logo"
-            />
+            {isDarkMode ? (
+              <Image
+                src="https://res.cloudinary.com/dahptqhed/image/upload/v1729065938/almentor_logo_2x_cfebb8e613.png"
+                width={124}
+                height={24}
+                alt="logo"
+              />
+            ) : (
+              <Image
+                src="https://res.cloudinary.com/dahptqhed/image/upload/v1733161852/almentor_owler_20210531_111400_original_7a0a6accc9.png"
+                width={150}
+                height={50}
+                alt="logo"
+              />
+            )}
           </Link>
           {mobileMenu && (
             <Menu
-              right={ar}
-              className={
-                ar
-                  ? "rtl bg-[#141717] right-0 left-0 text-white top-[11%] w-[100%] overflow-hidden"
-                  : " bg-[#141717] left-0 text-white top-[11%] w-[100%] overflow-hidden"
-              }
+              className={`text-white top-[11%] w-[100%] overflow-hidden ${
+                lng === "ar" ? "rtl right-0 left-0 " : "left-0 right-0 "
+              }${!isDarkMode ? "bg-[#dbdbdb]" : "bg-[#141717]"}`}
             >
               <nav
                 aria-label="Global"
                 className="rtl:text-right text-left rtl:mr-4 mt-[9%]"
               >
-                <ul className="flex items-left gap-6 text-sm ml-5 flex-col">
+                <ul className="flex items-center gap-6 text-sm ml-5 flex-col">
                   <li className="mt-1 mb-1">
                     <Link
-                      className="text-[20px] text-white transition hover:text-gray-500/75 dark:text-white dark:hover:text-white/75"
+                      className={`text-[16px] transition hover:text-gray-500/75 ${
+                        !isDarkMode ? "text-[#141717]" : "text-white"
+                      }
+                    }`}
                       href="/courses"
                       onClick={() => setMobileMenu(!mobileMenu)}
                     >
@@ -173,7 +257,10 @@ function Header() {
 
                   <li className="mt-1 mb-1">
                     <Link
-                      className="text-[20px] text-white  transition  hover:text-gray-500/75 dark:text-white dark:hover:text-white/75"
+                      className={`text-[16px] transition hover:text-gray-500/75 ${
+                        !isDarkMode ? "text-[#141717]" : "text-white"
+                      }
+}`}
                       href="/instructor"
                       onClick={() => setMobileMenu(!mobileMenu)}
                     >
@@ -185,51 +272,27 @@ function Header() {
 
                   {!user ? (
                     <>
-                      <li className="mt-1 mb-1 flex items-center">
-                        <div className="flex">
-                          <button
-                            className="text-white bold text-center mr-5 ml-10 text-[20px] height-[inherit]"
-                            onClick={arLng}
-                          >
-                            اللغه العربية
-                          </button>
-
-                          <button
-                            className="text-white bold text-center text-[20px] "
-                            onClick={enLng}
-                          >
-                            <Globe />
-                          </button>
-                        </div>{" "}
-                        {en && (
-                          <button
-                            className="text-white bold text-center items-center text-[20px] height-[inherit]"
-                            onClick={arLng}
-                          >
-                            AR
-                          </button>
-                        )}
-                        {ar && (
-                          <button
-                            className="text-white bold text-center items-center text-[20px] "
-                            onClick={enLng}
-                          >
-                            <Globe />
-                          </button>
-                        )}
-                      </li>
-                      <hr className="w-[80%] h-[0.5px] border-t-[#d3d3d333] m-[auto]" />
-
                       <li className="mt-2 mb-2 flex items-center">
                         <Link
-                          className="rounded-md border  mr-3 pl-7 pr-7 pt-2 pb-2 text-[15px] font-medium transition hover:text-teal-600/75 sm:block  dark:hover:text-white/75"
+                          className={classNames(
+                            "rounded-md border mr-3 pl-7 pr-7 pt-2 pb-2 text-[15px] font-medium transition text-white sm:block",
+                            {
+                              "text-white": isDarkMode,
+                              "text-[#2a2e2e]": !isDarkMode,
+                            }
+                          )}
                           href="http://localhost:3000/sign-in"
                           onClick={() => setMobileMenu(!mobileMenu)}
                         >
                           {t("Login")}
                         </Link>
                         <Link
-                          className="rounded-md border  pl-7 pr-7 pt-2 pb-2 text-[15px] font-medium text-white transition hover:bg-[#1e2121] hover:border"
+                          className={`rounded-md border pl-7 pr-7 pt-2 pb-2 text-[15px] font-medium ${
+                            !isDarkMode
+                              ? "text-[#141717]"
+                              : "text-white transition"
+                          }
+                    }`}
                           href="http://localhost:3000/sign-up"
                           onClick={() => setMobileMenu(!mobileMenu)}
                         >
@@ -241,12 +304,61 @@ function Header() {
 
                       <li className="mt-1 mb-1">
                         <Link
-                          className="text-[20px] text-white pt-2 pb-2 pl-20 pr-20 bg-[#bd2130] transition rounded hover:text-gray-500/75 dark:text-white dark:hover:text-white/75"
+                          className="text-[16px] text-white pt-2 pb-2 pl-20 pr-20 bg-[#bd2130] transition rounded hover:text-gray-500/75 dark:text-white dark:hover:text-white/75"
                           href="/subscribe"
                           onClick={() => setMobileMenu(!mobileMenu)}
                         >
                           {t("Subscribe")}
                         </Link>
+                      </li>
+                      <li className="mt-1 mb-1 flex ">
+                        <div className="flex">
+                          <button
+                            className={`bold font-[cairo] text-center mr-5 ml-10 text-[15px] height-[inherit] ${
+                              !isDarkMode
+                                ? "text-[#141717]"
+                                : "text-white transition"
+                            }
+                    }`}
+                            onClick={() => LanguageChange("ar")}
+                          >
+                            اللغه العربية
+                          </button>
+
+                          <button
+                            className={`bold text-center text-[15px] ${
+                              !isDarkMode
+                                ? "text-[#141717]"
+                                : "text-white transition"
+                            }
+                    }`}
+                            onClick={() => LanguageChange("en")}
+                          >
+                            EN
+                          </button>
+                        </div>
+                      </li>
+                      <hr className="w-[80%] h-[0.5px] border-t-[#d3d3d333] m-[auto]" />
+                      <li className="mt-1 mb-1 flex ">
+                        <div className="flex">
+                          <div
+                            style={styles.container}
+                            className={
+                              isDarkMode
+                                ? "bg-[#2a2e2e] justify-center items-center"
+                                : "bg-[#f2f2f2] justify-center items-center"
+                            }
+                          >
+                            <button onClick={toggleMode}>
+                              <Moon
+                                style={
+                                  isDarkMode ? styles.icon : styles.whiteIcon
+                                }
+                                className={isDarkMode ? "" : "fill-black"}
+                              />
+                            </button>
+                          </div>
+                        </div>
                       </li>
                     </>
                   ) : (
@@ -255,10 +367,17 @@ function Header() {
                         <Link
                           href="/bookmark"
                           onClick={() => setMobileMenu(!mobileMenu)}
-                          className="flex items-center text-[20]"
+                          className={`flex items-center text-[16px] ${
+                            !isDarkMode ? "text-[#141717]" : "text-white"
+                          }
+    }`}
                         >
                           {" "}
-                          <Bookmark />
+                          <Bookmark
+                            width={15}
+                            height={15}
+                            className="ml-2 mr-2"
+                          />
                           {t("Saved Courses")}
                           <p className="ml-2"></p>
                         </Link>
@@ -269,9 +388,16 @@ function Header() {
                         <Link
                           href="/cart"
                           onClick={() => setMobileMenu(!mobileMenu)}
-                          className="flex items-center text-[20]"
+                          className={`flex items-center text-[16px] ${
+                            !isDarkMode ? "text-[#141717]" : "text-white"
+                          }
+    }`}
                         >
-                          <ShoppingCart />
+                          <ShoppingCart
+                            width={15}
+                            height={15}
+                            className="ml-2 mr-2"
+                          />
                           {t("Subscribtion Courses")}
                           <p className="ml-2"></p>
                           <span className="ml-2">({cart.length})</span>
@@ -282,15 +408,18 @@ function Header() {
                       <li className="mt-1 mb-1 flex ">
                         <div className="flex">
                           <button
-                            className="text-white bold text-center mr-5 ml-10 text-[20px] height-[inherit]"
-                            onClick={arLng}
+                            className={`bold font-[cairo] text-center mr-5 ml-10 text-[15px] height-[inherit] ${
+                              !isDarkMode ? "text-[#141717]" : "text-white"
+                            }
+      }`}
+                            onClick={() => LanguageChange("ar")}
                           >
                             اللغه العربية
                           </button>
 
                           <button
-                            className="text-white bold text-center text-[20px] "
-                            onClick={enLng}
+                            className="text-white bold text-center text-[15px] "
+                            onClick={() => LanguageChange("en")}
                           >
                             <Globe />
                           </button>
@@ -298,9 +427,31 @@ function Header() {
                       </li>
                       <hr className="w-[80%] h-[0.5px] border-t-[#d3d3d333] m-[auto]" />
 
+                      <li className="mt-1 mb-1 flex ">
+                        <div className="flex">
+                          <div
+                            style={styles.container}
+                            className={
+                              isDarkMode
+                                ? "bg-[#2a2e2e] justify-center items-center"
+                                : "bg-[#f2f2f2] justify-center items-center"
+                            }
+                          >
+                            <button onClick={toggleMode}>
+                              <Moon
+                                style={
+                                  isDarkMode ? styles.icon : styles.whiteIcon
+                                }
+                                className={isDarkMode ? "" : "fill-black"}
+                              />
+                            </button>
+                          </div>
+                        </div>
+                      </li>
+                      <hr className="w-[80%] h-[0.5px] border-t-[#d3d3d333] m-[auto]" />
                       <li className="mt-1 mb-1">
                         <Link
-                          className="text-[20px] text-white pt-2 pb-2 pl-20 pr-20 bg-[#bd2130] transition rounded hover:text-gray-500/75 dark:text-white dark:hover:text-white/75"
+                          className="text-[16px] text-white pt-2 pb-2 pl-20 pr-20 bg-[#bd2130] transition rounded hover:text-gray-500/75 dark:text-white dark:hover:text-white/75"
                           href="/subscribe"
                           onClick={() => setMobileMenu(!mobileMenu)}
                         >
@@ -314,12 +465,19 @@ function Header() {
             </Menu>
           )}
 
-          <div className="flex flex-1 items-center justify-end md:justify-between relative">
-            <nav aria-label="Global" className="hidden md:block">
-              <ul className="flex items-center gap-6 text-sm">
+          <div className="flex flex-1 items-center justify-end lg:justify-between md:justify-end relative">
+            <nav
+              aria-label="Global"
+              className="xl:flex md:hidden lg:flex hidden "
+            >
+              <ul className="flex items-center gap-2 xl:gap-6  text-sm">
                 <li>
                   <Link
-                    className="text-[15px] text-gray-500 transition hover:text-gray-500/75 dark:text-white dark:hover:text-white/75"
+                    className={
+                      isDarkMode
+                        ? "text-[15px] text-white"
+                        : "text-[15px] text-black"
+                    }
                     href="/courses"
                   >
                     {t("Courses")}
@@ -328,7 +486,11 @@ function Header() {
 
                 <li>
                   <Link
-                    className="text-[15px] text-gray-500 transition hover:text-gray-500/75 dark:text-white dark:hover:text-white/75"
+                    className={
+                      isDarkMode
+                        ? "text-[15px] text-white"
+                        : "text-[15px] text-black"
+                    }
                     href="/instructor"
                   >
                     {t("Instructors")}
@@ -337,7 +499,11 @@ function Header() {
 
                 <li>
                   <Link
-                    className="text-[15px] text-gray-500 transition border border-solid rounded pl-5 pr-5 pt-2 pb-2 hover:text-gray-500/75 dark:text-white dark:hover:text-white/75"
+                    className={
+                      isDarkMode
+                        ? "text-[15px] text-white  border border-solid rounded pl-5 pr-5 pt-2 pb-2"
+                        : "text-[15px] text-white bg-[#bd2130]  rounded pl-5 pr-5 pt-2 pb-2"
+                    }
                     href="/subscribe"
                   >
                     {t("Subscribe")}
@@ -349,67 +515,91 @@ function Header() {
             <div className="flex items-center gap-4">
               {!user ? (
                 <div className="sm:flex sm:gap-2">
-                  {en && (
-                    <div className="lg:flex items-center justify-center relative">
-                      <form onSubmit={handleSearchSubmit} className="flex">
-                        <input
-                          type="text"
-                          value={searchText}
-                          onChange={handleSearchChange}
-                          placeholder="Search..."
-                          className=" hidden lg:block focus:border-none bg-[#1e2121] rounded pl-3 pr-3 pt-2 pb-2 text-white"
+                  <div
+                    className={`lg:flex items-center justify-center relative ${
+                      lng === "ar" ? "rtl" : ""
+                    }`}
+                  >
+                    <form onSubmit={(e) => e.preventDefault()} className="flex">
+                      {/* Prevent form submission */}
+                      <input
+                        type="text"
+                        placeholder={
+                          lng === "ar"
+                            ? "ابحث عن دورات تدريبية"
+                            : "Search Courses"
+                        } // Placeholder based on language
+                        value={query}
+                        onChange={handleInputChange} // Update query and URL
+                        className={
+                          isDarkMode
+                            ? " focus:border-none outline-none bg-[#1e2121] rounded pl-3 pr-3 pt-2 pb-2 md:mr-5 md:ml-5 md:pl-7 md:pr-7 text-white"
+                            : "focus:border-none outline-none rounded pl-3 pr-3 pt-2 pb-2 bg-[#d3d3d399] text-black md:mr-5 md:ml-5 md:pl-7 md:pr-7"
+                        }
+                      />
+                      <button
+                        type="submit"
+                        className="lg:flex items-center align-center justify-center flex"
+                      >
+                        <Search
+                          style={isDarkMode ? styles.icon : styles.gryIcon}
+                          className={`absolute cursor-pointer;
+                             ${lng === "ar" ? "left-[13%]" : "right-[10%]"}`}
                         />
-                        <button
-                          type="submit"
-                          className="flex items-center align-center justify-center"
-                        >
-                          {" "}
-                          <Search
-                            style={styles.icon}
-                            className="mr-2 absolute cursor-pointer right-[10%]"
-                          />{" "}
-                        </button>
-                      </form>
+                      </button>
+                    </form>
+                    <hr className="hidden lg:block h-[40px] bg-slate-400 w-[0.5px] mr-3 ml-3" />
+                  </div>
 
-                      <hr className="hidden lg:block h-[40px] bg-slate-400 w-[0.5px] mr-3 ml-3" />
-                    </div>
-                  )}
-
-                  {ar && (
-                    <div className="lg:flex items-center justify-center relative rtl">
-                      <form onSubmit={handleSearchSubmit} className="flex">
-                        <input
-                          type="text"
-                          value={searchText}
-                          onChange={handleSearchChange}
-                          placeholder="ابحث عن دورات تدريبية"
-                          className=" hidden lg:block focus:border-none bg-[#1e2121] rounded pl-3 pr-3 pt-2 pb-2 text-white"
-                        />
-                        <button
-                          type="submit"
-                          className="flex items-center align-center justify-center"
-                        >
-                          {" "}
-                          <Search
-                            style={styles.icon}
-                            className="mr-2 absolute cursor-pointer left-[10%]"
-                          />{" "}
-                        </button>
-                      </form>
-
-                      <hr className="hidden lg:block h-[40px] bg-slate-400 w-[0.5px] mr-3 ml-3" />
-                    </div>
-                  )}
-                  <div className="hidden lg:block">
+                  <div className="xl:flex md:hidden lg:flex hidden">
                     <div
                       style={styles.container}
-                      className="bg-[#2a2e2e] justify-center items-center"
+                      className={
+                        isDarkMode
+                          ? "bg-[#2a2e2e] justify-center items-center"
+                          : "bg-[#f2f2f2] justify-center items-center"
+                      }
                     >
-                      <Moon style={styles.icon} />
+                      <button onClick={toggleMode}>
+                        <Moon
+                          style={isDarkMode ? styles.icon : styles.whiteIcon}
+                          className={isDarkMode ? "" : "fill-black"}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="xl:flex md:hidden lg:flex hidden">
+                    <div
+                      style={styles.container}
+                      className={classNames("justify-center items-center", {
+                        "bg-[#2a2e2e]": isDarkMode,
+                        "bg-white": !isDarkMode,
+                      })}
+                    >
+                      <button
+                        className={classNames(
+                          "bold text-center items-center text-[20px] height-[inherit]",
+                          {
+                            "text-white": isDarkMode,
+                            "text-[#2a2e2e]": !isDarkMode,
+                          }
+                        )}
+                        onClick={() =>
+                          LanguageChange(lng === "ar" ? "en" : "ar")
+                        }
+                      >
+                        {lng === "ar" ? "EN" : "AR"}
+                      </button>
                     </div>
                   </div>
                   <Link
-                    className="hidden md:block underline rounded-md px-2 py-2.5 text-[16px] font-medium text-white transitionsm:block dark:text-white dark:hover:text-white/75"
+                    className={classNames(
+                      "hidden md:block underline rounded-md px-2 py-2.5 text-[16px] font-medium transitionsm:block",
+                      {
+                        "text-white": isDarkMode,
+                        "text-[#2a2e2e]": !isDarkMode,
+                      }
+                    )}
                     href="http://localhost:3000/sign-in"
                   >
                     {t("Login")}
@@ -423,95 +613,106 @@ function Header() {
                 </div>
               ) : (
                 <div className="flex test-white">
-                  {en && (
-                    <div className="lg:flex items-center justify-center relative">
-                      <form onSubmit={handleSearchSubmit} className="flex">
-                        <input
-                          type="text"
-                          value={searchText}
-                          onChange={handleSearchChange}
-                          placeholder="Search..."
-                          className=" hidden lg:block focus:border-none bg-[#1e2121] rounded pl-3 pr-3 pt-2 pb-2 text-white"
-                        />
-                        <button
-                          type="submit"
-                          className="flex items-center align-center justify-center"
-                        >
-                          {" "}
-                          <Search
-                            style={styles.icon}
-                            className="mr-2 absolute cursor-pointer right-[10%]"
-                          />{" "}
-                        </button>
-                      </form>
-
-                      <hr className="hidden lg:block h-[40px] bg-slate-400 w-[0.5px] mr-3 ml-3" />
-                    </div>
-                  )}
-
-                  {ar && (
-                    <div className="lg:flex items-center justify-center relative rtl">
-                      <form onSubmit={handleSearchSubmit} className="flex">
-                        <input
-                          type="text"
-                          value={searchText}
-                          onChange={handleSearchChange}
-                          placeholder="ابحث عن دورات تدريبية"
-                          className=" hidden lg:block focus:border-none bg-[#1e2121] rounded pl-3 pr-3 pt-2 pb-2 text-white"
-                        />
-                        <button
-                          type="submit"
-                          className="flex items-center align-center justify-center"
-                        >
-                          {" "}
-                          <Search
-                            style={styles.icon}
-                            className="mr-2 absolute cursor-pointer left-[10%]"
-                          />{" "}
-                        </button>
-                      </form>
-
-                      <hr className="hidden lg:block h-[40px] bg-slate-400 w-[0.5px] mr-3 ml-3" />
-                    </div>
-                  )}
-                  <div className="hidden lg:block">
+                  <div
+                    className={
+                      lng === "ar"
+                        ? "lg:flex items-center justify-center relative rtl"
+                        : "lg:flex items-center justify-center relative"
+                    }
+                  >
+                    <form onSubmit={(e) => e.preventDefault()} className="flex">
+                      {" "}
+                      {/* Prevent form submission */}
+                      <input
+                        type="text"
+                        placeholder={
+                          lng === "ar"
+                            ? "ابحث عن دورات تدريبية"
+                            : "Search services"
+                        } // Placeholder based on language
+                        value={query}
+                        onChange={handleInputChange} // Update query and URL
+                        className={
+                          isDarkMode
+                            ? " focus:border-none bg-[#1e2121] rounded pl-3 pr-3 pt-2 pb-2 md:mr-5 md:ml-5 md:pl-7 md:pr-7 text-white"
+                            : "focus:border-none rounded pl-3 pr-3 pt-2 pb-2 bg-[#d3d3d399] text-black md:mr-5 md:ml-5 md:pl-7 md:pr-7"
+                        }
+                      />
+                      <button
+                        type="submit"
+                        className="lg:flex items-center align-center flex justify-center"
+                      >
+                        {" "}
+                        <Search
+                          style={isDarkMode ? styles.icon : styles.gryIcon}
+                          className={`absolute cursor-pointer;
+                               ${
+                                 lng === "ar"
+                                   ? "mr-2 absolute cursor-pointer right-[70%]"
+                                   : "mr-2 absolute cursor-pointer left-[60%]"
+                               }`}
+                        />{" "}
+                      </button>
+                    </form>
+                    <hr className="hidden lg:block h-[40px] bg-slate-400 w-[0.5px] mr-3 ml-3" />
+                  </div>
+                  <div className="xl:flex md:hidden lg:flex hidden">
                     <div
                       style={styles.container}
-                      className="bg-[#2a2e2e] justify-center items-center"
+                      className={classNames("justify-center items-center", {
+                        "bg-[#2a2e2e]": isDarkMode,
+                        "bg-white": !isDarkMode,
+                      })}
                     >
-                      {en && (
-                        <button
-                          className="text-white bold text-center items-center text-[20px] height-[inherit]"
-                          onClick={arLng}
-                        >
-                          AR
-                        </button>
-                      )}
-
-                      {ar && (
-                        <button
-                          className="text-white bold text-center items-center text-[20px] "
-                          onClick={enLng}
-                        >
-                          EN
-                        </button>
-                      )}
+                      <button
+                        className={classNames(
+                          "bold text-center items-center text-[20px] height-[inherit]",
+                          {
+                            "text-white": isDarkMode,
+                            "text-[#2a2e2e]": !isDarkMode,
+                          }
+                        )}
+                        onClick={() =>
+                          LanguageChange(lng === "ar" ? "en" : "ar")
+                        }
+                      >
+                        {lng === "ar" ? "EN" : "AR"}
+                      </button>
                     </div>
                   </div>
-                  <div className="hidden lg:block">
+                  <div className="xl:flex md:hidden lg:flex hidden">
                     <div
                       style={styles.container}
-                      className="bg-[#2a2e2e] justify-center items-center"
+                      className={
+                        isDarkMode
+                          ? "bg-[#2a2e2e] justify-center items-center"
+                          : "bg-[#f2f2f2] justify-center items-center"
+                      }
                     >
-                      <Moon style={styles.icon} />
+                      <button onClick={toggleMode}>
+                        <Moon
+                          style={isDarkMode ? styles.icon : styles.whiteIcon}
+                          className={isDarkMode ? "" : "fill-black"}
+                        />
+                      </button>
                     </div>
                   </div>
-                  <div className=" hidden lg:block">
+                  <div className=" xl:flex md:hidden lg:flex hidden">
                     <div className="relative flex ">
-                      <div style={styles.container} className="bg-[#2a2e2e]">
+                      <div
+                        style={styles.container}
+                        className={
+                          isDarkMode
+                            ? "bg-[#2a2e2e] justify-center items-center"
+                            : "bg-[#f2f2f2] justify-center items-center"
+                        }
+                      >
                         <Link href="/bookmark">
                           {" "}
-                          <Bookmark style={styles.icon} />
+                          <Bookmark
+                            style={isDarkMode ? styles.icon : styles.whiteIcon}
+                            className={isDarkMode ? "" : "fill-black"}
+                          />
                         </Link>
                       </div>
                       {bookedItemLength > 0 && (
@@ -523,10 +724,11 @@ function Header() {
                       )}
                     </div>
                   </div>
-                  <div className="hidden relative lg:flex mr-2">
-                    <div style={styles.container} className="bg-[#2a2e2e]">
+                  <div className="xl:flex md:hidden lg:flex hidden relative  mr-2">
+                    <div style={styles.container}>
                       <ShoppingCart
-                        style={styles.icon}
+                        style={isDarkMode ? styles.icon : styles.whiteIcon}
+                        className={isDarkMode ? "" : "fill-black"}
                         onClick={() => setOpenCart(!openCart)}
                       />
                     </div>

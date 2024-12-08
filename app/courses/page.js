@@ -5,29 +5,25 @@ import Link from "next/link";
 import servicesApi from "../_Utils/servicesApi";
 import SkeletonService from "./skeletonService";
 import { Bookmark } from "lucide-react";
-
 import { useUser } from "@clerk/nextjs";
-
 import { BookMarkContext } from "../_Context/bookMarkContext";
-
 import AOS from "aos";
 import { toast } from "react-toastify";
-
 import "aos/dist/aos.css";
+import useSetup from "../hooks/useSetup";
 
 function page() {
   const [serviceList, setServiceList] = useState([]);
   const [filter, setFilter] = useState(""); // Initialize filter state
+  const [filteredServices, setFilteredServices] = useState([]); // Filtered results
+
   const [loading, setLoading] = useState(true);
-
+  const { lng, isDarkMode, t } = useSetup();
+  const [bookedColor, setBookedColor] = useState(false);
   const { user } = useUser();
-  // const router = useRouter();
   const { booked, setBooked } = useContext(BookMarkContext);
-  const isBooked = booked.some(
-    (bookedItem) => bookedItem.id === serviceList.id
-  );
-  // Check if the service is already booked
 
+  // Check if the service is already booked
   useEffect(() => {
     AOS.init({
       duration: 1000, // Animation duration in milliseconds
@@ -42,25 +38,24 @@ function page() {
     }
   }, [setBooked]);
 
-  const handleBooked = () => {
-    // Calling toast method by passing string
-    toast.error("You Already Booked in");
-  };
   const handleToggleBook = (item) => {
     const isAlreadyBooked = booked.some(
       (bookedItem) => bookedItem.id === item.id
     );
 
     if (isAlreadyBooked) {
+      setBookedColor(bookedColor);
+
       // Remove from booked
       const updatedBooked = booked.filter(
         (bookedItem) => bookedItem.id !== item.id
       );
-
       setBooked(updatedBooked);
       localStorage.setItem("bookedItems", JSON.stringify(updatedBooked));
       toast.error("Item removed from bookmarks!");
     } else {
+      setBookedColor(!bookedColor);
+
       // Add to booked
       const updatedBooked = [...booked, item];
       setBooked(updatedBooked);
@@ -72,6 +67,7 @@ function page() {
   const notify = () => {
     toast.error("You Must Be Logged in");
   };
+
   useEffect(() => {
     getService();
 
@@ -79,10 +75,11 @@ function page() {
       duration: 1000, // Animation duration in milliseconds
       once: false,
     });
-  }, []);
+  }, [lng]);
   const getService = async () => {
     try {
       // Await the API call to get the latest services
+      // const response = await servicesApi.getLatestServices(lng);
       const response = await servicesApi.getLatestServices();
       const data = response.data;
       setServiceList(data);
@@ -94,92 +91,97 @@ function page() {
     }
   };
 
-  // Handle search input
   const handleSearchChange = (event) => {
-    setFilter(event.target.value);
+    const value = event.target.value;
+    setFilter(value); // Update the search query
   };
 
-  // Filter services based on title or author
-  const filteredServices = serviceList.filter((service) => {
-    const title = service?.attributes?.name?.toLowerCase() || "";
-    const author = service?.attributes?.Author?.toLowerCase() || "";
-    return (
-      title.includes(filter.toLowerCase()) ||
-      author.includes(filter.toLowerCase())
-    );
-  });
+  const normalizeText = (text) => {
+    if (!text) return "";
+    return text
+      .normalize("NFKD") // Normalize Unicode
+      .replace(/[\u064B-\u065F]/g, "") // Remove Arabic diacritics
+      .toLowerCase(); // Case-insensitive
+  };
+
+  useEffect(() => {
+    const normalizedQuery = normalizeText(filter); // Normalize user input
+
+    // Filter services based on normalized query
+    const results = serviceList.filter((service) => {
+      const name = normalizeText(service?.attributes?.name || ""); // Normalize English name
+      const nameAr = normalizeText(service?.attributes?.name_ar || ""); // Normalize Arabic name
+      const author = normalizeText(service?.attributes?.Author || "");
+      const authorAr = normalizeText(service?.attributes?.Author_ar || "");
+
+      return (
+        name.includes(normalizedQuery) ||
+        nameAr.includes(normalizedQuery) ||
+        author.includes(normalizedQuery) ||
+        authorAr.includes(normalizedQuery)
+      );
+    });
+
+    // Update filtered services
+    setFilteredServices(results);
+  }, [filter, serviceList]); // Dependencies: Run effect only when filter or serviceList changes
+
   const filterLength = filteredServices.length;
   return (
-    <div className="mt-10 p-10 bg-[#1e2121]">
+    <div
+      className={`mt-10 p-10 
+    ${!isDarkMode ? "bg-[#d1cfcf] text-black" : "bg-[#1e2121]"}`}
+    >
       {!loading && (
         <>
           <div className="mt-3 flex justify-center">
-            <h2 className="text-white text-[25px] lg-text-[30px] font-extrabold">
-              Discover All Courses
+            <h2
+              className={`text-[25px] lg-text-[30px]
+         ${
+           !isDarkMode
+             ? "text-[#141717] font-weight: 400"
+             : "text-white font-extrabold "
+         }`}
+            >
+              {t("Discover All Courses")}
             </h2>
           </div>
 
           <div className="flex justify-center mt-5 flex-col lg:flex-row items-center">
             <input
-              placeholder="Search Your course ..."
+              placeholder={
+                lng === "ar" ? "ابحث عن دورات تدريبية" : "Search Courses"
+              }
               value={filter}
               onChange={handleSearchChange} // Update search input
-              className="pt-3 pb-3 w-[100%] mb-2 lg:w-[60%] border bg-[#1e2121] rounded pl-4 text-white"
+              className={`pr-4 pt-3 pb-3 w-[100%] mb-2 lg:w-[60%] border rounded pl-4 outline-none
+         ${
+           !isDarkMode
+             ? "text-[#141717] bg-[#dbdbdb]"
+             : "text-white bg-[#1e2121]"
+         }`}
             />
-            <button className=" rounded bg-[#bd2130] h-12 w-[100%] lg:w-[100px] text-center pt-3 text-white pr-3 pb-3 lg:pr-7 lg:pl-7 lg:ml-3">
-              Search
-            </button>
           </div>
         </>
       )}
 
-      <div className="bg-[#141717] w-[full] p-5 hover:shadow-md overflow-hidden mb-8 rounded mt-10 ">
+      <div
+        className={`w-[full] p-5 hover:shadow-md overflow-hidden mb-8 rounded mt-10
+         ${!isDarkMode ? "bg-[#9e9e9e80]" : "bg-[#141717]"}`}
+      >
         {!loading ? (
           <div className=" grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 lg:gap-3 lg:p-10">
-            {/* {serviceList.map((service) => (
-              <div className="bg-[#141717] w-[full] p-5 hover:shadow-md overflow-hidden mb-8 rounded">
-                <div
-                  id={service?.id}
-                  className="group bg-[#141717] w-[320px] m-auto relative block overflow-hidden rounded-lg shadow-sm shadow-indigo-100"
-                >
-                  <Image
-                    src={service?.attributes?.image?.data?.attributes?.url}
-                    width={320}
-                    height={200}
-                    alt="Your Image Alt Text"
-                    className="h-56 object-fit transition duration-500 group-hover:scale-105 sm:h-60 bg-black"
-                  />
-                  <Link href="">
-                    <div className="relative bg-[#141717]  p-2 border rouded">
-                      <h3 className="mt-1.5 text-[15px] text-white line-clamp-1">
-                        Course
-                      </h3>
-                      <p className="mt-1.5 text-[#a1a1a1] text-[13px]">
-                        By {service?.attributes?.Author}
-                      </p>
-
-                      <p className="text-white mt-4">
-                        <span className="text-white line-through mr-5">
-                          {" "}
-                          8000 SAR /mo
-                        </span>
-                        {service?.attributes?.price}SAR /mo
-                      </p>
-                    </div>
-                  </Link>
-                </div>
-              </div>
-            ))} */}
-
             {/* Display filtered list */}
             {filteredServices.map((service) => (
               <div
                 key={service.id}
-                className="bg-[#141717] w-full lg:p-5 hover:shadow-md overflow-hidden mb-8 rounded"
+                className={`w-full lg:p-5 hover:shadow-md overflow-hidden mb-8 rounded
+         ${!isDarkMode ? "bg-[#dbdbdb]" : "bg-[#141717]"}`}
               >
                 <div
                   id={service.id}
-                  className="group bg-[#141717] w-[220px] lg:w-[320px] m-auto relative block overflow-hidden rounded-lg shadow-sm shadow-indigo-100"
+                  className={`group w-[220px] lg:w-[320px] m-auto relative block overflow-hidden rounded-lg shadow-sm shadow-indigo-100
+                  ${!isDarkMode ? "bg-[#d1cfcf]" : "bg-[#141717]"}`}
                   data-aos="fade-up"
                   data-aos-anchor-placement="center-bottom"
                 >
@@ -193,13 +195,16 @@ function page() {
                   ) : (
                     <button
                       onClick={() => handleToggleBook(service)}
-                      className="absolute end-4 top-3 z-20 rounded-full bg-[#252a2a] p-1 text-white border-gray-400 transition"
+                      className="absolute end-4 top-3 z-20 border rounded-full bg-[#252a2a] p-1 text-white border-gray-400 transition"
                     >
-                      {isBooked ? (
-                        <Bookmark className="fill-white" />
-                      ) : (
-                        <Bookmark />
-                      )}
+                      {/* Dynamically set the fill color based on booking status */}
+                      <Bookmark
+                        className={
+                          booked.some((item) => item.id === service.id)
+                            ? "fill-white"
+                            : ""
+                        }
+                      />
                     </button>
                   )}
                   <Image
@@ -212,21 +217,57 @@ function page() {
                   />
                   <Link href={`/service_details/${service?.id}`}>
                     <div
-                      className="relative bg-[#141717] p-2 border rounded"
+                      className={`relative p-2 border rounded
+                     ${!isDarkMode ? "bg-[#d1cfcf]" : "bg-[#141717]"}`}
                       data-aos="fade-zoom-in"
                       data-aos-easing="ease-in-back"
                     >
-                      <h3 className="mt-1.5 text-[15px] text-white line-clamp-1">
-                        {service?.attributes?.name || "Course"}
+                      <h3
+                        className={`mt-1.5 text-lg line-clamp-1 ltr:ml-1
+                     ${!isDarkMode ? "text-[#141717]" : "text-white"}`}
+                      >
+                        {lng === "ar"
+                          ? service?.attributes?.name_ar // Display Arabic name for Arabic users
+                          : service?.attributes?.name}
                       </h3>
-                      <p className="mt-1.5 text-[#a1a1a1] text-[13px]">
-                        By {service?.attributes?.Author}
-                      </p>
-                      <p className="text-white mt-4">
-                        <span className="text-white line-through mr-5">
-                          8000 SAR /mo
+                      <p
+                        className={`mt-1.5 text-[13px]
+                     ${!isDarkMode ? "text-[#141717]" : "text-[#a1a1a1]"}`}
+                      >
+                        {t("By")}
+
+                        <span className="ml-2 mr-2">
+                          {" "}
+                          {lng === "ar"
+                            ? service?.attributes?.Author_ar // Display Arabic name for Arabic users
+                            : service?.attributes?.Author}
                         </span>
-                        {service?.attributes?.price} SAR /mo
+                      </p>
+                      <p
+                        className={`mt-4
+                     ${!isDarkMode ? "text-[#141717]" : "text-white"}`}
+                      >
+                        {lng === "ar" ? (
+                          <div dir="ltr" className="text-end">
+                            <span
+                              className={`line-through mr-2 ml-2
+                     ${!isDarkMode ? "text-[#141717]" : "text-white"}`}
+                            >
+                              8000 SAR /mo
+                            </span>
+                            {service?.attributes?.price} SAR /mo
+                          </div>
+                        ) : (
+                          <>
+                            <span
+                              className={`line-through mr-2 ml-2
+                     ${!isDarkMode ? "text-[#141717]" : "text-white"}`}
+                            >
+                              8000 SAR /mo
+                            </span>
+                            ${service?.attributes?.price} SAR /mo
+                          </>
+                        )}
                       </p>
                     </div>
                   </Link>
@@ -245,7 +286,11 @@ function page() {
               width={170}
               height={160}
             />
-            <h2 className="text-[28px] font-semibold text-white mb-20">
+            <h2
+              className={`mb-20 text-[28px] font-semibold
+                     ${!isDarkMode ? "text-[#141717]" : "text-white"}`}
+            >
+              {" "}
               We couldn't find any search results
             </h2>
           </div>

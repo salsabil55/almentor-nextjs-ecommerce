@@ -32,7 +32,6 @@ const Modal = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl">Page with Auto-Open Bouncing Modal</h1>
       {isModalOpen && (
         <div
           id="modalOverlay"
@@ -42,7 +41,7 @@ const Modal = () => {
           }`}
         >
           <div
-            className={`bg-black w-[100%] lg:w-[35%]  p-6 rounded-lg shadow-lg relative ransform transition-transform duration-700 ease-in ${
+            className={`bg-black w-[100%] lg:w-[35%] sm:w-[50%] p-6 rounded-lg shadow-lg relative ransform transition-transform duration-700 ease-in ${
               bounce ? "animate-bounce" : ""
             } ${isModalOpen ? "scale-100" : "scale-0"}`}
           >
@@ -54,10 +53,10 @@ const Modal = () => {
             </button>
             <Image
               src="https://res.cloudinary.com/dahptqhed/image/upload/v1729165363/poster4_fad04e5a91.jpg"
+              className="w-full h-full object-cover transition duration-500 group-hover:scale-105 rounded-lg"
               width={450}
               height={420}
               alt="service Detail Banner"
-              className="transition duration-500 group-hover:scale-105 rounded-lg "
             />
 
             <div className="flex items-center justify-center text-white">

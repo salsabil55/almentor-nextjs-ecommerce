@@ -5,13 +5,19 @@ import Image from "next/image";
 import bookMarkApi from "../_Utils/bookMarkApi";
 import { useUser } from "@clerk/clerk-react";
 import Link from "next/link";
+import useSetup from "../hooks/useSetup";
+import i18n from "../i18n";
 
 function bookMarkPage() {
   const { user } = useUser();
+  const { lng, isDarkMode, t } = useSetup();
+
   const { booked, setBooked } = useContext(BookMarkContext);
   // Retrieve and parse data from localStorage
   let bookedItems = [];
-
+  useEffect(() => {
+    window.document.dir = i18n.dir();
+  }, [lng]);
   try {
     const rawData = localStorage.getItem("bookedItems");
     bookedItems = JSON.parse(rawData) || []; // Parse and provide a fallback if null
@@ -92,8 +98,12 @@ function bookMarkPage() {
       <div className="mx-auto px-4 py-8 sm:px-6 sm:py-12 lg:px-8 flex justify-between flex-wrap">
         <div className="mx-auto w-[100%] lg:w-[80%] border rounded p-2 lg:p-6 overflow-y-auto h-[430px]">
           <header className="text-left">
-            <h1 className="text-l font-bold text-white sm:text-3xl">
-              Booked Marked Courses
+            <h1
+              className={`font-bold sm:text-3xl ${
+                lng === "ar" ? "text-right" : "text-left"
+              } ${!isDarkMode ? "text-black" : "text-white"}`}
+            >
+              {t("Booked Marked Courses")}
             </h1>
           </header>
 
@@ -105,7 +115,7 @@ function bookMarkPage() {
                   className="flex items-center gap-2 lg:gap-4 bg-[#1e21214d] rounded p-3"
                 >
                   {/* Use Link only around items you want to be clickable for navigation */}
-                  <Link href={`service_details/${item?.services?.id}`}>
+                  <Link href={`service_details/${item?.id}`}>
                     <div className="flex items-center gap-2 lg:gap-4 flex-wrap">
                       <Image
                         src={item?.attributes?.image?.data?.attributes?.url}
@@ -116,13 +126,17 @@ function bookMarkPage() {
                       />
                       <div>
                         <h3 className="text-[10px] lg:text-[16px] text-white">
-                          {item?.attributes?.name}
+                          {lng === "ar"
+                            ? item?.attributes?.name_ar // Display Arabic name for Arabic users
+                            : item?.attributes?.name}
                         </h3>
                         <dl className="mt-0.5 space-y-px text-[10px] text-white">
                           <div>
-                            <dt className="inline">By: </dt>
+                            <dt className="inline">{t("By")}: </dt>
                             <dd className="inline">
-                              {item?.attributes?.Author}
+                              {lng === "ar"
+                                ? item?.attributes?.Author_ar // Display Arabic name for Arabic users
+                                : item?.attributes?.Author}
                             </dd>
                           </div>
                           <div>
@@ -164,8 +178,12 @@ function bookMarkPage() {
           </div>
 
           {bookedItems.length === 0 && (
-            <p className="text-white text-[20px] shadow-lg rounded flex justify-center bg-[#1e21214d] p-5 h-40 items-center">
-              Your Booked List Empty
+            <p
+              className={`text-white text-[20px] shadow-lg rounded flex justify-center p-5 h-40 items-center ${
+                !isDarkMode ? "text-black" : "bg-[#1e21214d] text-white"
+              }`}
+            >
+              {t("Your Booked List Empty")}
             </p>
           )}
         </div>

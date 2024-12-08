@@ -8,15 +8,15 @@ import "aos/dist/aos.css";
 
 import KeenSlider from "keen-slider";
 import "keen-slider/keen-slider.min.css";
-import cookies from "js-cookie";
+import useSetup from "../hooks/useSetup";
 
 function InstructorPage() {
+  const { lng, isDarkMode, t } = useSetup();
+
   const sliderRef = useRef(null);
   const [slider, setSlider] = useState(null);
   const [activeSlide, setActiveSlide] = useState(1);
-
   const [serviceList, setServiceList] = useState([]);
-  const lng = cookies.get("i18next") || "en";
 
   useEffect(() => {
     getService();
@@ -27,11 +27,9 @@ function InstructorPage() {
   }, [lng]);
 
   const getService = async () => {
-    const lng = cookies.get("i18next") || "en";
-
     try {
       // Await the API call to get the latest services
-      const response = await servicesApi.getLatestServices(lng);
+      const response = await servicesApi.getLatestServices();
       const data = response.data;
       setServiceList(data);
 
@@ -109,10 +107,18 @@ function InstructorPage() {
   });
   return (
     <div>
-      <section className="bg-[#1e21214d] text-white">
+      <section
+        className={`text-center text-2xl font-bold tracking-tight sm:text-2xl ${
+          !isDarkMode ? "bg-[#d1cfcf] text-black" : " bg-[#1e21214d] text-white"
+        }`}
+      >
         <div className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-          <h2 className="text-center text-4xl font-bold tracking-tight text-white-900 sm:text-5xl">
-            Our trusted Instructors
+          <h2
+            className={`text-center text-2xl font-bold tracking-tight sm:text-2xl ${
+              !isDarkMode ? "text-black" : " text-white"
+            }`}
+          >
+            {t("Our trusted Instructors")}
           </h2>
 
           <div className="mt-8">
@@ -120,7 +126,11 @@ function InstructorPage() {
               {serviceList.map((service) => (
                 <div className="keen-slider__slide opacity-40 transition-opacity duration-500">
                   <blockquote
-                    className="rounded-lg  p-6 shadow-sm sm:p-8 flex bg-[#1e21214d]"
+                    className={`rounded-lg text-justify p-6 shadow-sm sm:p-8 flex ${
+                      !isDarkMode
+                        ? "bg-[#e5e0e0] text-[#1e21214d]"
+                        : " bg-[#1e21214d]"
+                    }`}
                     data-aos="fade-up"
                     data-aos-anchor-placement="top-bottom"
                   >
@@ -138,11 +148,23 @@ function InstructorPage() {
 
                         <div>
                           <div className="flex items-left flex-col mb-3">
-                            <p className="mt-0.5 font-medium text-white-900 text-[17px]">
-                              {service?.attributes?.Author}
+                            <p
+                              className={`mt-0.5 font-medium text-[17px] ${
+                                !isDarkMode ? "text-black" : "text-white-900"
+                              }`}
+                            >
+                              {lng === "ar"
+                                ? service?.attributes?.Author_ar // Display Arabic name for Arabic users
+                                : service?.attributes?.Author}
                             </p>
-                            <p className="mt-0.5 font-normal text-white-900 text-[15px]">
-                              {service?.attributes?.name}
+                            <p
+                              className={`mt-0.5 font-medium text-[15px] ${
+                                !isDarkMode ? "text-black" : "text-white-900"
+                              }`}
+                            >
+                              {lng === "ar"
+                                ? service?.attributes?.name_ar // Display Arabic name for Arabic users
+                                : service?.attributes?.name}
                             </p>
                           </div>
                           <div className="flex justify-left gap-0.5 text-yellow-500">
@@ -191,7 +213,9 @@ function InstructorPage() {
                       </div>
 
                       <p className="mt-4 text-gray-700">
-                        {service?.attributes?.describtion}
+                        {lng === "ar"
+                          ? service?.attributes?.describtion_ar // Display Arabic name for Arabic users
+                          : service?.attributes?.describtion}{" "}
                       </p>
                     </Link>
                   </blockquote>

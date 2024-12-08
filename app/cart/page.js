@@ -1,14 +1,21 @@
 "use client";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { CartContext } from "../_Context/cartContext";
 import Image from "next/image";
 import cartApi from "../_Utils/cartApi";
 import { useRouter } from "next/navigation";
+import useSetup from "../hooks/useSetup";
 
 function cartPage() {
+  const { lng, isDarkMode, t } = useSetup();
+
   const router = useRouter();
 
   const { cart, setCart } = useContext(CartContext);
+  const [code, setCode] = useState("");
+  const [showButton, setShowButton] = useState(false);
+  const [codeSuccess, setCodeSuccess] = useState(false);
+  const [codeError, setCodeError] = useState(false);
   const getTotalAmount = () => {
     let totalAmount = 0;
     cart.forEach((item) => {
@@ -30,27 +37,47 @@ function cartPage() {
         console.log(err);
       });
   };
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setCode(value);
 
-  // const deleteItem = (id) => {
-  //   cartApi
-  //     .deleteCartItem(id)
-  //     .then((res) => {
-  //       if (res)
-  //         setCart((oldCart) =>
-  //           oldCart.filter((item) => item.id !== res?.data?.data?.id)
-  //         );
-  //     })
-  //     .catch((error) => {
-  //       console.log("error", error);
-  //     });
-  // };
+    // Show button only when there's input
+    setShowButton(value.trim() !== "");
+
+    // Clear message when code is cleared
+    if (value.trim() === "") {
+      setCodeSuccess(false);
+      setCodeError(false);
+    }
+  };
+  const applyCoupon = () => {
+    if (code.toLowerCase() === "mentor24") {
+      setCodeSuccess(true);
+    } else {
+      setCodeError(true);
+    }
+    setShowButton(false); // Hide button after clicking
+  };
   return (
     <section>
       <div className="mx-auto  px-4 py-8 sm:px-6 sm:py-12 lg:px-8 flex justify-between flex-wrap">
-        <div className="mx-auto lg:w-[60%] w-[100%] mb-3 border rounded p-6 overflow-y-auto h-[430px]">
-          <header className="text-left">
-            <h1 className="text-l font-bold text-white sm:text-3xl">
-              Courses Cart List
+        <div
+          className={`mx-auto lg:w-[60%] w-[100%] mb-3 border rounded p-6 overflow-y-auto h-[430px] 
+         ${!isDarkMode ? "bg-[#dbdbdb]" : "bg-[#1e2121e6]"}`}
+        >
+          <header
+            className={`
+         ${lng === "ar" ? "text-right font-light" : "text-left"}`}
+          >
+            <h1
+              className={`sm:text-3xl
+         ${
+           !isDarkMode
+             ? "text-black font-light text-xl"
+             : "text-white font-bold "
+         }`}
+            >
+              {t("Courses Cart List")}
             </h1>
           </header>
 
@@ -75,15 +102,19 @@ function cartPage() {
                   <div>
                     <h3 className="text-[16px] text-white">
                       {" "}
-                      {item?.serviceDetail?.attributes?.name}
+                      {lng === "ar"
+                        ? item?.serviceDetail?.attributes?.name_ar // Display Arabic name for Arabic users
+                        : item?.serviceDetail?.attributes?.name}
                     </h3>
 
                     <dl className="mt-0.5 space-y-px text-[10px] text-white">
                       <div>
-                        <dt className="inline">By:</dt>
+                        <dt className="inline">{t("By")}:</dt>
                         <dd className="inline">
                           {" "}
-                          {item?.serviceDetail?.attributes?.Author}
+                          {lng === "ar"
+                            ? item?.serviceDetail?.attributes?.Author_ar // Display Arabic name for Arabic users
+                            : item?.serviceDetail?.attributes?.Author}
                         </dd>
                       </div>
 
@@ -131,24 +162,71 @@ function cartPage() {
               ))}
             </ul>
           </div>
+          {cart.length == 0 && (
+            <div className="flex text-center justify-center items-center mt-40">
+              <p>{t("Your Cart List Is Empty")}</p>
+            </div>
+          )}
         </div>
-        <div className="border w-[100%] lg:w-[30%] text-white rounded p-6 h-[100%] overflow-hidden">
-          <p>Order Summary</p>
-          <div className="mt-8 flex justify-end">
+        <div
+          className={`border w-[100%] lg:w-[30%] rounded p-6 h-[100%] overflow-hidden ${
+            !isDarkMode ? "bg-[#989999] text-white" : "text-white"
+          }`}
+        >
+          <p>{t("Order Summary")}</p>
+          <div className="mt-8 flex lg:justify-end justify-start">
             <div className="w-screen max-w-lg space-y-4">
               <dl className="space-y-0.5 text-sm text-white">
-                <div className="flex mb-5">
+                <div className="flex mb-5 flex-col">
                   <input
-                    placeholder="Apply Coupon Code"
-                    className="bg-[#090a0ae6] text-[13px] rounded w-[100%] p-3 mr-3"
+                    onChange={handleInputChange}
+                    value={code}
+                    placeholder={
+                      lng === "ar"
+                        ? "ادخل كود الخصم mentor24" // Display Arabic name for Arabic users
+                        : "Apply Coupon Code mentor24"
+                    }
+                    className={`text-[13px] rounded w-[100%] p-3 mr-3 ml-3 outline-none ${
+                      !isDarkMode
+                        ? "text-black bg-[#e5e5e5]"
+                        : "bg-[#090a0ae6] text-white"
+                    }`}
                   />
-                  <button className="rounded text-white border border-[#591c1c66] text-[12px] pl-5 pr-5 pb-2 pt-2">
-                    Apply
-                  </button>
+                  {/* <button
+                    className={`rounded border text-[12px] pl-5 pr-5 pb-2 pt-2 ${
+                      !isDarkMode
+                        ? "bg-black text-white"
+                        : "text-white border-[#591c1c66]"
+                    }`}
+                    onClick={applyCoupon}
+                  >
+                    {t("Apply")}
+                  </button> */}
+                  {codeSuccess && (
+                    <p className="bg-[#2aae38] border-green-800 rounded mt-4 text-white text-center p-3 font-normal">
+                      {" "}
+                      {t("Code Applied Succefully")}
+                    </p>
+                  )}
+                  {codeError && (
+                    <p className="bg-[#a00006] border-red-800 rounded mt-4 text-white text-center p-3 font-normal">
+                      {" "}
+                      {t("Code Failed")}
+                    </p>
+                  )}
+
+                  {showButton && (
+                    <button
+                      className="mt-3 bg-white text-[#0c0e0e]  font-medium rounded w-[100%] text-center border-solid pl-10 pr-10 h-11 text-[15px] border-gray-200"
+                      onClick={applyCoupon}
+                    >
+                      Apply Coupon
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex justify-between mb-2 pb-2 pt-2">
-                  <dt>Subtotal</dt>
+                  <dt>{t("Subtotal")}</dt>
 
                   <dd>{getTotalAmount()} SAR</dd>
                 </div>
@@ -159,17 +237,17 @@ function cartPage() {
                 </div>
 
                 <div className="flex justify-between pb-3 pt-2 mb-5">
-                  <dt>Discount</dt>
+                  <dt>{t("Discount")}</dt>
                   <dd>-20 SAR</dd>
                 </div>
 
                 <div className="flex justify-between pb-3 pt-2 mb-5">
-                  <dt>Discount</dt>
+                  <dt>{t("Discount")}</dt>
                   <dd className="">-20 SAR</dd>
                 </div>
 
                 <div className="flex justify-between text-[17px] font-semibold border-t pt-5 border-gray-100">
-                  <dt>Total (Inclusive of VAT)</dt>
+                  <dt>{"Total (Inclusive of VAT)"}</dt>
                   <dd>{getTotalAmount()} SAR </dd>
                 </div>
               </dl>
@@ -181,7 +259,7 @@ function cartPage() {
                   }
                   className="block w-[100%] text-center rounded bg-[#fd0000] px-5 py-3 text-sm text-gray-100 transition hover:bg-gray-600"
                 >
-                  Checkout
+                  {"Checkout"}
                 </button>
               </div>
             </div>

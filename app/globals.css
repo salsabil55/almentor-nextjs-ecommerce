@@ -9,6 +9,27 @@ html[dir="rtl"] * {
 :root {
   --foreground-rgb: 0, 0, 0;
 }
+:root {
+  --background-color: #e5e5e5;
+  --text-color: #ffffff;
+}
+
+[data-theme="dark"] {
+  --background-color: black;
+  --text-color: white;
+}
+
+[data-theme="light"] {
+  --background-color: #e5e5e5;
+  --text-color: black;
+}
+
+/* Apply the variables */
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s; /* Smooth transition */
+}
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -29,9 +50,9 @@ video {
   height: revert-layer;
 }
 
-body {
+/* body {
   background-color: black;
-}
+} */
 
 .cl-internal-1dauvpw {
   display: none;
@@ -61,12 +82,18 @@ body {
 .bm-menu-wrap {
   width: 100% !important;
 }
-.bm-menu-wrap.rtl {
-  left: auto !important; /* Prevent left override */
-  right: 0 !important; /* Open from the right */
-}
 button#react-burger-menu-btn {
-  width: 100px !important;
+  width: 400px !important;
+}
+[dir="rtl"] button#react-burger-menu-btn {
+  right: 0 !important;
+  left: auto !important; /* Ensure left is unset in RTL */
+}
+
+/*  */
+.rtl .bm-burger-button button#react-burger-menu-btn {
+  right: 0 !important;
+  left: 100% !important;
 }
 #scroll-progress {
   position: fixed;
@@ -80,4 +107,15 @@ button#react-burger-menu-btn {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+}
+.page-container {
+  transition: opacity 0.5s ease;
+}
+
+.page-container.fade-out {
+  opacity: 0;
+}
+
+.page-container.fade-in {
+  opacity: 1;
 }

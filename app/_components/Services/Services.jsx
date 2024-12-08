@@ -4,7 +4,6 @@ import ServicesList from "./ServicesList";
 // import servicesApi from "@/app/_Utils/servicesApi";
 import servicesApi from "../../_Utils/servicesApi";
 import i18n from "../../i18n";
-import { useTranslation } from "react-i18next";
 import cookies from "js-cookie";
 
 function Services() {
@@ -15,7 +14,6 @@ function Services() {
   // const [loading, setLoading] = useState(true);
 
   // Fetch the product when the component mounts
-  const { t } = useTranslation();
 
   useEffect(() => {
     getService();
@@ -27,7 +25,7 @@ function Services() {
     try {
       // Await the API call to get the latest services
 
-      const response = await servicesApi.getLatestServices(lng);
+      const response = await servicesApi.getLatestServices();
       const data = response.data;
       const service = data.slice(0, 3);
       setServiceList(service);

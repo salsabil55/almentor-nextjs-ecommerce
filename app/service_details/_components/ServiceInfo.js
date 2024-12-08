@@ -14,9 +14,13 @@ import SkeletonInfo from "./SkeletonInfo";
 import cartApi from "../../_Utils/cartApi";
 import { CartContext } from "../../_Context/cartContext";
 import AOS from "aos";
+import { useTranslation } from "react-i18next";
+import i18n from "../../i18n";
 import "aos/dist/aos.css";
-function ServiceInfo({ serviceDetail }) {
+function ServiceInfo({ serviceDetail, lng }) {
   const { user } = useUser();
+  const [lnges, setlnges] = useState(i18n.language); // Track current language
+  const { t } = useTranslation();
   const router = useRouter();
   const { cart, setCart } = useContext(CartContext);
   const [code, setCode] = useState("");
@@ -109,37 +113,50 @@ function ServiceInfo({ serviceDetail }) {
               data-aos-easing="ease-in-sine"
             >
               <h2 className="text-[22px] mb-6">
-                {serviceDetail?.attributes?.name}
+                {lng === "ar"
+                  ? serviceDetail?.attributes?.name_ar // Display Arabic name for Arabic users
+                  : serviceDetail?.attributes?.name}{" "}
               </h2>
 
               {/* <h2 className="text-[15px] mt-5">
             {serviceDetail?.attributes?.description[0]?.children[0].text}
           </h2> */}
-              <p className="flex text-blue-600 mb-2">
-                <span className="text-white mr-3">By : </span>
-                {serviceDetail?.attributes?.Author}
+              <p className="flex  mb-2">
+                <span className="mr-3 ml-3">{t("By")} : </span>
+                <span className="text-[#bd2130]">
+                  {lng === "ar"
+                    ? serviceDetail?.attributes?.Author_ar // Display Arabic name for Arabic users
+                    : serviceDetail?.attributes?.Author}{" "}
+                </span>
               </p>
               <p className="flex mb-2">
-                <Clock className="w-4 mr-3" />
-                <span>Duration :</span>
+                <Clock className="w-4 mr-3 ml-3" />
+                <span className="mr-3 ml-3">{t("Duration")}:</span>
                 {serviceDetail?.attributes?.Duration}
               </p>
               <p className="flex mb-2">
-                <Globe className="w-4 mr-3" /> Course Language :{" "}
+                <Globe className="w-4 mr-3 ml-3" />
+                <span className="mr-3 ml-3"> {t("courseLanguage")}</span>
                 {serviceDetail?.attributes?.courseLanguage}
               </p>
               <h2 className="text-white-500 text-[15px] flex-col items-center gap-2">
                 {serviceDetail?.attributes?.AvailableDiscount ? (
                   <>
                     <div className="flex">
-                      <TicketPercent className="text-white-700 text-[15px] w-4" />
-                      <p className="ml-3">Available Discount Now</p>
+                      <TicketPercent className="text-white-700 text-[15px] w-4 mr-3 ml-3" />
+                      <p className="ml-3 mr-3 text-green-800">
+                        {t("Available Discount Now")}
+                      </p>
                     </div>
                     <div className="coupon flex-col block">
                       <input
                         className="coupon-text mt-3 border bg-[#e2e8f01a] w-[100%] text-center border-solid rounded pl-10 pr-10 h-11 text-[12px] border-gray-200"
                         type="text"
-                        placeholder="Enter Your Coupoun code"
+                        placeholder={
+                          lng === "ar"
+                            ? " ادخل كود الخصم mentor24"
+                            : "Enter Your Coupoun code mentor24"
+                        }
                         value={code}
                         onChange={handleInputChange}
                       />
@@ -153,15 +170,15 @@ function ServiceInfo({ serviceDetail }) {
                       )} */}
 
                       {codeSuccess && (
-                        <p className="bg-green-300 border-green-800 rounded mt-4 text-green-900 text-center p-3 font-normal">
+                        <p className="bg-[#2aae38] border-green-800 rounded mt-4 text-white text-center p-3 font-normal">
                           {" "}
-                          Code Applied Succefully
+                          {t("Code Applied Succefully")}
                         </p>
                       )}
                       {codeError && (
-                        <p className="bg-red-300 border-red-800 rounded mt-4 text-red-900 text-center p-3 font-normal">
+                        <p className="bg-[#a00006] border-red-800 rounded mt-4 text-white text-center p-3 font-normal">
                           {" "}
-                          Code Failed
+                          {t("Code Failed")}
                         </p>
                       )}
 
@@ -178,13 +195,13 @@ function ServiceInfo({ serviceDetail }) {
                 ) : (
                   <div className="flex">
                     <CircleOff className="w-3" />
-                    <p className="ml-3">Not Available Discount Now</p>
+                    <p className="ml-3">{t("Not Available Discount Now")}</p>
                   </div>
                 )}
               </h2>
               <h2 className="text-[15px] text-white-950 mt-7 mb-9">
                 <span className="text-gray-500">
-                  Get access to all courses only for{" "}
+                  {t("Get access to all courses only for")}
                   {serviceDetail?.attributes?.price} SAR /mo
                 </span>{" "}
               </h2>
@@ -193,7 +210,7 @@ function ServiceInfo({ serviceDetail }) {
                 className="flex gap-2 mb-9 justify-center items-center text-center text-[13px] bg-[#eb2027] rounded-lg text-white w-[100%] pt-2 pb-2"
               >
                 <ShoppingCart className="w-4" />
-                Add To Cart
+                {t("Subscribe")}
               </button>
             </div>
           ) : (
