@@ -86,7 +86,9 @@ function cartPage() {
               {cart?.map((item) => (
                 <li
                   key={item?.id}
-                  className="flex items-center gap-4 bg-[#1e21214d] rounded p-3"
+                  className={`flex items-center gap-4 rounded p-3 ${
+                    !isDarkMode ? "bg-[#797f81]" : "bg-[#1e21214d]"
+                  }`}
                 >
                   <Image
                     src={
@@ -170,7 +172,7 @@ function cartPage() {
         </div>
         <div
           className={`border w-[100%] lg:w-[30%] rounded p-6 h-[100%] overflow-hidden ${
-            !isDarkMode ? "bg-[#989999] text-white" : "text-white"
+            !isDarkMode ? "bg-[#797f81] text-white" : "text-white"
           }`}
         >
           <p>{t("Order Summary")}</p>

@@ -89,7 +89,9 @@ function bookMarkPage() {
               {bookedItems?.map((item) => (
                 <li
                   key={item?.id}
-                  className="flex items-center gap-2 lg:gap-4 bg-[#1e21214d] rounded p-3"
+                  className={`flex items-center gap-2 lg:gap-4 rounded p-3 ${
+                    !isDarkMode ? "bg-[#797f81]" : "bg-[#1e21214d]"
+                  }`}
                 >
                   {/* Use Link only around items you want to be clickable for navigation */}
                   <Link href={`service_details/${item?.id}`}>
