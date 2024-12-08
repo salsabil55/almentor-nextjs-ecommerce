@@ -32,9 +32,13 @@ function page() {
   }, []);
 
   useEffect(() => {
-    const storedItems = JSON.parse(localStorage.getItem("bookedItems") || "[]");
-    if (storedItems) {
-      setBooked(storedItems);
+    if (typeof window !== "undefined") {
+      const storedItems = JSON.parse(
+        localStorage.getItem("bookedItems") || "[]"
+      );
+      if (storedItems) {
+        setBooked(storedItems);
+      }
     }
   }, [setBooked]);
 

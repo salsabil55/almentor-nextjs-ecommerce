@@ -42,11 +42,14 @@ function ServiceItem({ service }) {
   }, [service]);
 
   useEffect(() => {
-    const storedItems = JSON.parse(localStorage.getItem("bookedItems") || "[]");
-    if (storedItems) {
+    if (typeof window !== "undefined") {
+      // Ensure this runs only on client side
+      const storedItems = JSON.parse(
+        localStorage.getItem("bookedItems") || "[]"
+      );
       setBooked(storedItems);
     }
-  }, [setBooked]);
+  }, []); // Runs o
 
   const handleToggleBook = (item) => {
     const isAlreadyBooked = booked.some(

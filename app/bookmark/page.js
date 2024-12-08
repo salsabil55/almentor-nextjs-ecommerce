@@ -18,12 +18,14 @@ function bookMarkPage() {
   useEffect(() => {
     window.document.dir = i18n.dir();
   }, [lng]);
-  try {
-    const rawData = localStorage.getItem("bookedItems");
-    bookedItems = JSON.parse(rawData) || []; // Parse and provide a fallback if null
-  } catch (error) {
-    console.error("Error parsing bookedItems from localStorage:", error);
-    bookedItems = []; // Fallback to an empty array if parsing fails
+  if (typeof window !== "undefined") {
+    try {
+      const rawData = localStorage.getItem("bookedItems");
+      bookedItems = JSON.parse(rawData) || []; // Parse and provide a fallback if null
+    } catch (error) {
+      console.error("Error parsing bookedItems from localStorage:", error);
+      bookedItems = []; // Fallback to an empty array if parsing fails
+    }
   }
 
   // Ensure bookedItems is an array
@@ -37,61 +39,36 @@ function bookMarkPage() {
   }
 
   const deleteItem = (id) => {
-    try {
-      // Retrieve and parse bookedItems from localStorage
-      const rawData = localStorage.getItem("bookedItems");
-      const bookedItems = JSON.parse(rawData) || [];
+    if (typeof window !== "undefined") {
+      // Ensure localStorage is available
 
-      if (!Array.isArray(bookedItems)) {
-        console.error("Invalid data in bookedItems. Resetting to empty array.");
-        localStorage.setItem("bookedItems", JSON.stringify([]));
-        setBooked(bookedItems);
-        return;
+      try {
+        // Retrieve and parse bookedItems from localStorage
+        const rawData = localStorage.getItem("bookedItems");
+        const bookedItems = JSON.parse(rawData) || [];
+
+        if (!Array.isArray(bookedItems)) {
+          console.error(
+            "Invalid data in bookedItems. Resetting to empty array."
+          );
+          localStorage.setItem("bookedItems", JSON.stringify([]));
+          setBooked(bookedItems);
+          return;
+        }
+
+        // Filter out the item with the matching id
+        const updatedItems = bookedItems.filter((item) => item.id !== id);
+        setBooked(updatedItems);
+
+        // Save the updated list back to localStorage
+        localStorage.setItem("bookedItems", JSON.stringify(updatedItems));
+
+        console.log(`Item with id ${id} deleted successfully.`);
+      } catch (error) {
+        console.error("Error deleting item from bookedItems:", error);
       }
-
-      // Filter out the item with the matching id
-      const updatedItems = bookedItems.filter((item) => item.id !== id);
-      setBooked(updatedItems);
-
-      // Save the updated list back to localStorage
-      localStorage.setItem("bookedItems", JSON.stringify(updatedItems));
-
-      console.log(`Item with id ${id} deleted successfully.`);
-    } catch (error) {
-      console.error("Error deleting item from bookedItems:", error);
     }
   };
-
-  // useEffect(() => {
-  //   user && getBookedItems();
-  // }, [user]);
-
-  // const getBookedItems = () => {
-  //   bookMarkApi
-  //     .getUserBookItems(user.primaryEmailAddress.emailAddress)
-  //     .then((res) => {
-  //       const bookedItems = res?.data?.data.map((bookItem) => ({
-  //         id: bookItem.id,
-  //         services: bookItem?.attributes?.services?.data[0],
-  //       }));
-  //       setBooked(bookedItems); // Set all items at once to avoid duplication
-  //     });
-  // };
-
-  // const deleteItem = (id) => {
-  //   bookMarkApi
-  //     .deleteBookItem(id)
-  //     .then((res) => {
-  //       console.log(res?.data?.data);
-  //       if (res)
-  //         setBooked((oldCart) =>
-  //           oldCart.filter((item) => item.id !== res?.data?.data.id)
-  //         );
-  //     })
-  //     .catch((err) => {
-  //       console.log(err);
-  //     });
-  // };
 
   return (
     <section>
